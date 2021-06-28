@@ -2,6 +2,7 @@ import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.11
 import "./components"
+import "./scripts/helper.js" as Helper
 
 Page {
 	id: root
@@ -95,11 +96,13 @@ Page {
 								}
 							}
 
-							MouseArea{
+							MouseArea {
 								anchors.fill: parent
 								hoverEnabled: true
 								cursorShape: Qt.PointingHandCursor
-								onClicked: {}
+								onClicked: {
+
+								}
 							}
 						}
 						model: statemanager_.peermodel
@@ -114,10 +117,33 @@ Page {
 			height: 100
 			Layout.fillHeight: true
 			Layout.fillWidth: true
+			// keep track if created object
+			// TODO: try your best to not use this
+			property list<ChatPage> pages
 
-			Repeater {
-				model: statemanager_.peermodel
-				delegate: ChatPage {}
+			function addClient(data) {
+				let page = Helper.createQObject(
+						chat_stack,
+						Qt.createComponent("./components/ChatPage.qml"), {
+							"userdata": data
+						})
+
+				if (page !== null)
+					chat_stack.pages.push(page)
+			}
+
+			Connections {
+				target: client
+
+				function onContactListRecieved(message) {
+					message.body.forEach(function (data) {
+						chat_stack.addClient(data)
+					})
+				}
+
+				function onNewPeerJoined(message) {
+					chat_stack.addClient(message.body)
+				}
 			}
 		}
 	}

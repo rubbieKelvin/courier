@@ -7,7 +7,8 @@ logging.basicConfig(
 	level=logging.INFO,
 	format='%(asctime)s %(name)-8s %(levelname)-8s %(message)s',
 	datefmt='%m-%d %H:%M',
-	filename='courier.log')
+	filename='courier.log',
+	filemode="w")
 
 def is_valid_ip(ip: str) -> bool:
 	try:

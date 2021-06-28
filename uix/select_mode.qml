@@ -7,7 +7,6 @@ Page {
 	readonly property StackView mainstack_: mainstack
 
 	Column {
-		id: column
 		x: 168
 		y: 221
 		height: 99

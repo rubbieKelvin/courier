@@ -7,6 +7,7 @@ ApplicationWindow {
 	visible: true
 	width: 600
 	height: 450
+	title: "Courier"
 
 	readonly property StateManager statemanager: StateManager {}
 

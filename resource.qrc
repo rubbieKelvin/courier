@@ -8,5 +8,6 @@
         <file>uix/components/LoadButton.qml</file>
         <file>uix/components/ChatPage.qml</file>
         <file>uix/join_server.qml</file>
+        <file>uix/scripts/helper.js</file>
     </qresource>
 </RCC>

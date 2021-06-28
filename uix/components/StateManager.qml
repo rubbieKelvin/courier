@@ -56,7 +56,7 @@ QtObject {
 
 			function onContactListRecieved(message) {
 				const contact_list = message.body
-				contact_list.forEach(function(peer){
+				contact_list.forEach(function (peer) {
 					peermodel.append(peer)
 				})
 			}

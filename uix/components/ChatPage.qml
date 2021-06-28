@@ -4,7 +4,7 @@ import QtQuick.Layouts 1.11
 
 Page {
 	id: root
-	property string name: "{no-name}"
+	required property var userdata
 
 	ColumnLayout {
 		anchors.fill: parent
@@ -20,7 +20,7 @@ Page {
 				width: 372
 				height: 11
 				font.pixelSize: 12
-				text: qsTr("Hostname")
+				text: userdata.username
 				anchors.verticalCenter: parent.verticalCenter
 			}
 		}
