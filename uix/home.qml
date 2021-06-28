@@ -53,7 +53,7 @@ Page {
 
 				Label {
 					id: label3
-					text: qsTr("Peers (5)")
+					text: qsTr(`Peers (${statemanager_.peermodel.count})`)
 					font.pointSize: 12
 					Layout.alignment: Qt.AlignLeft | Qt.AlignTop
 				}
@@ -89,10 +89,17 @@ Page {
 
 								Label {
 									height: parent.height
-									text: name
+									text: username
 									font.pixelSize: 11
 									Layout.fillWidth: true
 								}
+							}
+
+							MouseArea{
+								anchors.fill: parent
+								hoverEnabled: true
+								cursorShape: Qt.PointingHandCursor
+								onClicked: {}
 							}
 						}
 						model: statemanager_.peermodel

@@ -2,7 +2,10 @@
 # if there's a resource.qrc file... compile it into a python file
 
 if [[ -f resource.qrc ]]; then
-	pyside2-rcc resource.qrc -o resource.py
+	pyside2-rcc \
+		--compress-algo none \
+		-g python \
+		resource.qrc -o resource.py
 	python main.py
 else
 	echo "no resource.qrc file."

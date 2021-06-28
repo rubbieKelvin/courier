@@ -8,7 +8,8 @@ from datetime import datetime
 INTENT_BROADCAST = 0	# used when messages are meant to be shared
 INTENT_HANDSHAKE = 1	# used when client - server are handshaking
 INTENT_NEW_PEER  = 2	# used to tell client a user has joined
-INTENT_PROFILE_UPDATE = 3 # used byt client to update profle on server
+INTENT_PROFILE_UPDATE = 3 # used by client to update profle on server
+INTENT_CONTACT_LIST_REQUEST = 4 # used pass contact list to client
 
 class Text:
 	def __init__(self, body:str, intent:int = INTENT_BROADCAST, **meta) -> None:

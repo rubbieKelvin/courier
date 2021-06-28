@@ -6,7 +6,7 @@ QtObject {
 	readonly property ListModel peermodel: ListModel {}
 	readonly property ListModel chatmodel: ListModel {}
 
-	signal requireAuth()
+	signal requireAuth
 	signal handshakeDone(bool successful)
 
 	function createServer(password) {
@@ -26,7 +26,7 @@ QtObject {
 		}
 	}
 
-	function connectToServer(hostname){
+	function connectToServer(hostname) {
 		client.connect_to(hostname)
 		waitingForAuth = true
 	}
@@ -34,17 +34,31 @@ QtObject {
 	readonly property list<Connections> connections: [
 		Connections {
 			target: client
+
 			function onHandshakeReceived(message) {
 				if (root.waitingForAuth) {
-					if (message.body==="$auth"){
+					if (message.body === "$auth") {
 						requireAuth()
-					}else if (message.body==="$successfull" || message.body==="$no-auth"){
+					} else if (message.body === "$successfull"
+							   || message.body === "$no-auth") {
 						root.waitingForAuth = false
 						handshakeDone(true)
-					}else{
+					} else {
 						handshakeDone(false)
 					}
 				}
+			}
+
+			function onNewPeerJoined(message) {
+				const peer = message.body
+				peermodel.append(peer)
+			}
+
+			function onContactListRecieved(message) {
+				const contact_list = message.body
+				contact_list.forEach(function(peer){
+					peermodel.append(peer)
+				})
 			}
 		}
 	]

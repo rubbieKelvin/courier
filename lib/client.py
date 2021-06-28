@@ -12,9 +12,11 @@ from PySide2.QtWebSockets import QWebSocket
 from PySide2.QtNetwork import QAbstractSocket
 
 from .messages import Text
+from .messages import INTENT_NEW_PEER
 from .messages import INTENT_BROADCAST
 from .messages import INTENT_HANDSHAKE
 from .messages import INTENT_PROFILE_UPDATE
+from .messages import INTENT_CONTACT_LIST_REQUEST
 
 from .server import CourierServer
 
@@ -28,8 +30,10 @@ class CourierClient(QWebSocket):
 		self.textMessageReceived.connect(self.on_text_received)
 		self.binaryMessageReceived.connect(self.on_binary_received)
 
+	newPeerJoined = Signal("QVariant")
 	broadcastReceived = Signal("QVariant")
 	handshakeReceived = Signal("QVariant")
+	contactListRecieved = Signal("QVariant")
 
 	@Slot(result="QVariant")
 	def data(self) -> dict:
@@ -75,6 +79,10 @@ class CourierClient(QWebSocket):
 			self.handle_handshake_intent(message)
 		elif message.intent == INTENT_BROADCAST:
 			self.handle_broadcast_intent(message)
+		elif message.intent == INTENT_NEW_PEER:
+			self.handle_new_peer_intent(message)
+		elif message.intent == INTENT_CONTACT_LIST_REQUEST:
+			self.handle_contact_list_request(message)
 
 	def on_binary_received(self, data: QByteArray):
 		pass
@@ -87,3 +95,8 @@ class CourierClient(QWebSocket):
 	def handle_broadcast_intent(self, message: Text):
 		self.broadcastReceived.emit(message.toDict())
 
+	def handle_new_peer_intent(self, message: Text):
+		self.newPeerJoined.emit(message.toDict())
+
+	def handle_contact_list_request(self, message: Text):
+		self.contactListRecieved.emit(message.toDict())

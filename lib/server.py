@@ -13,9 +13,11 @@ from PySide2.QtWebSockets import QWebSocket
 from PySide2.QtWebSockets import QWebSocketServer
 
 from .messages import Text
+from .messages import INTENT_NEW_PEER
 from .messages import INTENT_HANDSHAKE
 from .messages import INTENT_BROADCAST
 from .messages import INTENT_PROFILE_UPDATE
+from .messages import INTENT_CONTACT_LIST_REQUEST
 
 
 class CourierClientDummy:
@@ -66,6 +68,17 @@ class CourierServer(QWebSocketServer):
 		logger.log(f"could not run server.")
 		return False
 
+	def add_client(self, client: CourierClientDummy):
+		# tell client whose has been here
+		message = Text([c.to_dict() for c in self.clients], intent=INTENT_CONTACT_LIST_REQUEST)
+		client.client.sendTextMessage(str(message))
+
+		# tell others client joined
+		message = Text(client.to_dict(), intent=INTENT_NEW_PEER)
+		for dummy in self.clients:
+			dummy.client.sendTextMessage(str(message))
+		
+		self.clients.add(client)
 
 	def on_new_connection(self):
 		client: QWebSocket = self.nextPendingConnection()
@@ -82,7 +95,7 @@ class CourierServer(QWebSocketServer):
 				intent=INTENT_HANDSHAKE,
 				client=client_dummy.to_dict()
 			)))
-			self.clients.add(client_dummy)
+			self.add_client(client_dummy)
 
 		client.disconnected.connect(self.on_client_disconnected)
 		client.textMessageReceived.connect(self.on_text_received)
@@ -110,7 +123,7 @@ class CourierServer(QWebSocketServer):
 		password = message.body
 		if password == self.password:
 			client_dummy = CourierClientDummy(client)
-			self.clients.add(client_dummy)
+			self.add_client(client_dummy)
 			return client.sendTextMessage(str(
 				Text(
 					CourierServer.HANDSHAKE_SUCCESSFULL,
