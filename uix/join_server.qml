@@ -17,32 +17,44 @@ Page {
 		anchors.verticalCenter: parent.verticalCenter
 		spacing: 15
 
-		RowLayout {
-			id: rowLayout
-			width: parent.width
-
-			Column {
-				id: column1
-				Label {
-					id: label
-					width: parent.width
-					text: qsTr("Courier")
-					horizontalAlignment: Text.AlignLeft
-					font.pointSize: 14
-				}
-
-				Label {
-					id: label1
-					opacity: 0.8
-					text: qsTr("Create Server")
-				}
+		Column {
+			id: column1
+			Label {
+				id: label
+				width: parent.width
+				text: qsTr("Courier")
+				horizontalAlignment: Text.AlignLeft
+				font.pointSize: 14
 			}
 
 			Label {
-				text: helper.hostname()
-				Layout.alignment: Qt.AlignRight | Qt.AlignVCenter
-				font.pointSize: 12
+				id: label1
+				opacity: 0.8
+				text: qsTr("Join Server")
 			}
+		}
+
+		Column {
+			id: column3
+			width: parent.width
+			Item {
+				id: item2
+				width: parent.width
+				height: 25
+				Label {
+					id: label3
+					text: qsTr("hostname")
+					anchors.verticalCenter: parent.verticalCenter
+				}
+			}
+
+			TextField {
+				id: hostname_field
+				width: parent.width
+				placeholderText: qsTr("Hostname or IPv4 address...")
+				enabled: button1.enabled
+			}
+			spacing: 2
 		}
 
 		Column {
@@ -102,30 +114,25 @@ Page {
 
 			LoadButton {
 				id: button1
-				text: qsTr("Create")
+				text: qsTr("Join")
 				Layout.fillWidth: true
 
 				onClicked: {
 					enabled = false
-					if (statemanager_.createServer(password_field.text)) {
-
-						// wait for signal:statemanager.onClientAuthComplete
-					} else {
-						enabled = true
-					}
+					statemanager_.connectToServer(hostname_field.text)
 				}
 
 				Connections {
 					target: statemanager_
-					
+
+					function onRequireAuth(){
+						client.authenticate(password_field.text)
+					}
+
 					function onHandshakeDone(state) {
 						button1.enabled = true
 						if (state)
 							mainstack_.push("./home.qml")
-					}
-
-					function onRequireAuth() {
-						client.authenticate(password_field.text)
 					}
 				}
 			}
@@ -137,7 +144,7 @@ Page {
 
 /*##^##
 Designer {
-	D{i:0;autoSize:true;formeditorZoom:0.9;height:480;width:640}
+	D{i:0;autoSize:true;formeditorZoom:0.9;height:480;width:640}D{i:5}
 }
 ##^##*/
 

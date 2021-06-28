@@ -2,7 +2,11 @@
     <qresource prefix="/">
         <file>uix/main.qml</file>
         <file>uix/select_mode.qml</file>
+        <file>uix/home.qml</file>
         <file>uix/create_server.qml</file>
         <file>uix/components/StateManager.qml</file>
+        <file>uix/components/LoadButton.qml</file>
+        <file>uix/components/ChatPage.qml</file>
+        <file>uix/join_server.qml</file>
     </qresource>
 </RCC>

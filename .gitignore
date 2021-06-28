@@ -73,5 +73,10 @@ Thumbs.db
 *.exe
 
 # Editors
+# --------
 .vscode
 .idea
+*.pyproject.user
+
+# App files
+*.log

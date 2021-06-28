@@ -1,5 +1,6 @@
 import QtQuick 2.15
 import QtQuick.Controls 2.15
+import "./components"
 
 ApplicationWindow {
 	id: application
@@ -7,7 +8,10 @@ ApplicationWindow {
 	width: 600
 	height: 450
 
+	readonly property StateManager statemanager: StateManager {}
+
 	StackView {
+		id: mainstack
 		anchors.fill: parent
 		initialItem: "select_mode.qml"
 	}

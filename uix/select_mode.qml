@@ -4,6 +4,8 @@ import QtQuick.Controls 2.15
 Page {
 	id: root
 
+	readonly property StackView mainstack_: mainstack
+
 	Column {
 		id: column
 		x: 168
@@ -15,13 +17,12 @@ Page {
 
 		Column {
 			id: column1
-			anchors.horizontalCenter: parent.horizontalCenter
 
 			Label {
 				id: label
 				width: parent.width
 				text: qsTr("Courier")
-				horizontalAlignment: Text.AlignHCenter
+				horizontalAlignment: Text.AlignLeft
 				font.pointSize: 14
 			}
 
@@ -39,11 +40,13 @@ Page {
 			Button {
 				id: button
 				text: qsTr("Create Workspace")
+				onClicked: mainstack_.push("./create_server.qml")
 			}
 
 			Button {
 				id: button1
 				text: qsTr("Join Workspace")
+				onClicked: mainstack_.push("./join_server.qml")
 			}
 		}
 	}

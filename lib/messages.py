@@ -4,20 +4,19 @@ all messages sent over the network will be organised as per str(Text|Binary)
 """
 import json
 from datetime import datetime
-from PySide2.QtCore import QObject, Slot
 
 INTENT_BROADCAST = 0	# used when messages are meant to be shared
 INTENT_HANDSHAKE = 1	# used when client - server are handshaking
-INTENT_PROFILE_UPDATE = 2 # used byt client to update profle on server
+INTENT_NEW_PEER  = 2	# used to tell client a user has joined
+INTENT_PROFILE_UPDATE = 3 # used byt client to update profle on server
 
-class Text(QObject):
+class Text:
 	def __init__(self, body:str, intent:int = INTENT_BROADCAST, **meta) -> None:
-		super(Text, self).__init__()
 		self.body = body
 		self.intent = intent
 		self.meta = meta
 
-	def __str__(self) -> str:
+	def toDict(self) -> dict:
 		data = dict(
 			body=self.body,
 			intent=self.intent,
@@ -25,10 +24,12 @@ class Text(QObject):
 		)
 
 		data.update(self.meta)
-		return json.dumps(data)
+		return data
+
+	def __str__(self) -> str:
+		return json.dumps(self.toDict())
 
 	@staticmethod
-	@Slot(str)
 	def fromStr(message: str):
 		message:dict = json.loads(message)
 		t_obj = Text(message.get("body"), message.get("intent"))
