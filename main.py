@@ -1,8 +1,9 @@
+# rubbie kelvin
 # This Python file uses the following encoding: utf-8
 import sys
 
 # noinspection PyUnresolvedReferences
-import resource
+import qrc
 
 # pyside modules
 from PySide2 import QtQml
@@ -10,7 +11,6 @@ from PySide2 import QtCore
 from PySide2 import QtGui
 
 # lib
-from lib.messages import Text
 from lib.helper import Helper
 from lib.server import CourierServer
 from lib.client import CourierClient
@@ -20,6 +20,7 @@ if __name__ == "__main__":
     app = QtGui.QGuiApplication(sys.argv)
     engine = QtQml.QQmlApplicationEngine()
 
+    # Q OBJECTs
     helper = Helper()
     server = CourierServer()
     client = CourierClient()

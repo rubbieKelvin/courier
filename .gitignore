@@ -80,3 +80,8 @@ Thumbs.db
 
 # App files
 *.log
+
+# Build Files
+dist
+build
+*.spec
