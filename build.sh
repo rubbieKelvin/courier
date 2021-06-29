@@ -25,10 +25,13 @@ main(){
 	if [[ "$1" = "--package" ]]; then
 		echo "👀 cleaning up..."
 
-		rm -r dist
-		rm -r build
-		rm *.log
-		rm *.spec
+		rm -r dist > /dev/null
+		rm -r build > /dev/null
+
+		# optimize python scripts by removing all docstrings
+		# assert statements are also removed from byte codes
+		# this is an attempt to reduce bundle size along size --onefile in pyinstaller options
+		export PYTHONOPTIMIZE=1
 
 		echo "👀 building executable... might take a while"
 		# enable --key=key(16 chars) option for byte-code encryption: requires tinyaes and pycrypto
@@ -36,9 +39,16 @@ main(){
 			--windowed \
 			-n Courier \
 			--clean \
+			--onefile \
 			--log-level=CRITICAL \
 			main.py > /dev/null; then
-			echo "✅ built executable. at ./dist/Courier/"
+
+			# move executables to build
+			rm -r build
+			cp -r dist/ build
+			rm -r dist/
+
+			echo "✅ built executable. at build/Courier"
 		else
 			echo "❌ couldnt build executable..."
 			return 1
@@ -52,7 +62,7 @@ main(){
 		python main.py > runtime.log
 	else
 		echo "👀 running executable..."
-		if ./dist/Courier/Courier > runtime.build.log; then
+		if ./build/Courier > runtime.build.log; then
 			echo "🎉 app ran succesfully!"
 		else
 			echo "😭 there was a problem while running app"
