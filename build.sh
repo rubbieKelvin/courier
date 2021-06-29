@@ -25,8 +25,8 @@ main(){
 	if [[ "$1" = "--package" ]]; then
 		echo "👀 cleaning up..."
 
-		rm -r dist > /dev/null
-		rm -r build > /dev/null
+		if [[ -d dist ]]; then rm -r dist > /dev/null; fi
+		if [[ -d build ]]; then rm -r build > /dev/null; fi
 
 		# optimize python scripts by removing all docstrings
 		# assert statements are also removed from byte codes
