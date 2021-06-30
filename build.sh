@@ -43,6 +43,9 @@ main(){
 			--log-level=CRITICAL \
 			main.py > /dev/null; then
 
+			# remove spec file
+			rm *.spec
+
 			# move executables to build
 			rm -r build
 			cp -r dist/ build
@@ -59,7 +62,7 @@ main(){
 	# run result
 	if [[ -z "$1" ]]; then
 		echo "👀 running python script..."
-		python main.py > runtime.log
+		python main.py
 	else
 		echo "👀 running executable..."
 		if ./build/Courier > runtime.build.log; then

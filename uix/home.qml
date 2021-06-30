@@ -16,7 +16,7 @@ Page {
 			color: "#f6f6f6"
 			Layout.fillHeight: true
 
-			Column {
+			ColumnLayout {
 				id: columnLayout
 				anchors.fill: parent
 				anchors.margins: 25
@@ -131,7 +131,7 @@ Page {
 				let page = Helper.createQObject(
 						chat_stack,
 						Qt.createComponent("./components/ChatPage.qml"), {
-							"userdata": data
+							"user": data
 						})
 
 				if (page !== null)
@@ -141,7 +141,7 @@ Page {
 			Connections {
 				target: client
 
-				function onContactListRecieved(message) {
+				function onContactListReceived(message) {
 					message.body.forEach(function (data) {
 						chat_stack.addClient(data)
 					})
@@ -149,6 +149,31 @@ Page {
 
 				function onNewPeerJoined(message) {
 					chat_stack.addClient(message.body)
+				}
+
+				function onClientProfileUpdateReceived(message) {
+					const data = message.body
+					
+					// update client profile in chat page
+					// look for item in chat_stack.pages that match unique_id
+					for (var i = 0; i < chat_stack.pages.length; i++) {
+						const page = chat_stack.pages[i]
+						if (page.user.unique_id == data.unique_id) {
+							page.user = data
+							page.merge()
+							break
+						}
+					}
+
+					// update client profile in model
+					// loop though statemanager_.peermodel and then set the matching data
+					for (var j=0; j<statemanager_.peermodel.count; j++) {
+						const modelItem = statemanager_.peermodel.get(j)
+						if (modelItem.unique_id == data.unique_id){
+							statemanager_.peermodel.set(j, data)
+							break
+						}
+					}
 				}
 			}
 		}

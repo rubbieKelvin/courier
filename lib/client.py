@@ -7,6 +7,8 @@ from . import is_valid_ip
 from PySide2.QtCore import QUrl
 from PySide2.QtCore import Slot
 from PySide2.QtCore import Signal
+from PySide2.QtQml import QJSValue
+from PySide2.QtCore import Property
 from PySide2.QtCore import QByteArray
 from PySide2.QtWebSockets import QWebSocket
 from PySide2.QtNetwork import QAbstractSocket
@@ -30,12 +32,14 @@ class CourierClient(QWebSocket):
 		self.textMessageReceived.connect(self.on_text_received)
 		self.binaryMessageReceived.connect(self.on_binary_received)
 
+	dataChanged = Signal("QVariant")
 	newPeerJoined = Signal("QVariant")
 	broadcastReceived = Signal("QVariant")
 	handshakeReceived = Signal("QVariant")
-	contactListRecieved = Signal("QVariant")
+	contactListReceived = Signal("QVariant")
+	clientProfileUpdateReceived = Signal("QVariant")
 
-	@Slot(result="QVariant")
+	@Property("QVariant", notify=dataChanged)
 	def data(self) -> dict:
 		return self.data_
 
@@ -57,12 +61,17 @@ class CourierClient(QWebSocket):
 
 	@Slot(str)
 	def authenticate(self, password: str):
-		message = Text(password, intent=INTENT_HANDSHAKE) # sending raw passwords over network is a bad idea
+		# sending raw passwords over network is a bad idea
+		message = Text(password, intent=INTENT_HANDSHAKE)
 		self.sendTextMessage(str(message))
 
-	@Slot(str)
-	def update_profile(self, username: str):
-		self.sendTextMessage(str(Text(username, intent=INTENT_PROFILE_UPDATE)))
+	@Slot("QVariant")
+	def update_profile(self, data: QJSValue):
+		data: dict = data.toVariant()
+		self.data_.update(data)
+		self.dataChanged.emit(self.data_)
+		self.sendTextMessage(
+			str(Text(self.data_, intent=INTENT_PROFILE_UPDATE)))
 
 	def on_connected(self):
 		pass
@@ -71,7 +80,7 @@ class CourierClient(QWebSocket):
 		logger.error(f"error: {str(error)}")
 
 	def on_text_received(self, text: str):
-		logger.log(f"recieved: {text}")
+		logger.log(f"Received: {text}")
 
 		message = Text.fromStr(text)
 
@@ -83,12 +92,14 @@ class CourierClient(QWebSocket):
 			self.handle_new_peer_intent(message)
 		elif message.intent == INTENT_CONTACT_LIST_REQUEST:
 			self.handle_contact_list_request(message)
+		elif message.intent == INTENT_PROFILE_UPDATE:
+			self.handle_client_profile_update(message)
 
 	def on_binary_received(self, data: QByteArray):
 		pass
 
 	def handle_handshake_intent(self, message: Text):
-		if (message.body == CourierServer.HANDSHAKE_SUCCESSFULL):
+		if (message.body == CourierServer.HANDSHAKE_SUCCESSFULL or message.body == CourierServer.HANDSHAKE_NO_AUTH):
 			self.data_ = message.meta.get("client")
 		self.handshakeReceived.emit(message.toDict())
 
@@ -99,4 +110,7 @@ class CourierClient(QWebSocket):
 		self.newPeerJoined.emit(message.toDict())
 
 	def handle_contact_list_request(self, message: Text):
-		self.contactListRecieved.emit(message.toDict())
+		self.contactListReceived.emit(message.toDict())
+
+	def handle_client_profile_update(self, message: Text):
+		self.clientProfileUpdateReceived.emit(message.toDict())

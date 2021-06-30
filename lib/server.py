@@ -80,8 +80,9 @@ class CourierServer(QWebSocketServer):
 
 	def add_client(self, client: CourierClientDummy):
 		# tell client whose has been here
-		message = Text([c.to_dict() for c in self.clients], intent=INTENT_CONTACT_LIST_REQUEST)
-		client.client.sendTextMessage(str(message))
+		if len(self.clients):
+			message = Text([c.to_dict() for c in self.clients], intent=INTENT_CONTACT_LIST_REQUEST)
+			client.client.sendTextMessage(str(message))
 
 		# tell others client joined
 		message = Text(client.to_dict(), intent=INTENT_NEW_PEER)
@@ -156,7 +157,15 @@ class CourierServer(QWebSocketServer):
 
 	def handle_profile_update_intent(self, client: QWebSocket, message: Text):
 		client_dummy = self.get_client_dummy_from_qwebsocket_object(client)
-		client_dummy.username = message.body.strip()
+		profile: dict = message.body
+
+		if profile.get("username"):
+			client_dummy.username = profile.get("username")
+
+		# now tell everyone asides $client that he updated his profile
+		for dummy in self.clients:
+			if dummy != client_dummy:
+				dummy.client.sendTextMessage(str(message))
 
 	def get_client_dummy_from_qwebsocket_object(self, client: QWebSocket) -> CourierClientDummy:
 		return list(filter(lambda d: d.client == client, self.clients))[0]

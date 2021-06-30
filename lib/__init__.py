@@ -1,7 +1,10 @@
+import sys
 import socket
 import logging
 
 PORT=8977
+LOG_TO_FILE = False
+RUNNING_BUNDLE = getattr(sys, 'frozen', False)
 
 logging.basicConfig(
 	level=logging.INFO,
@@ -20,7 +23,8 @@ def is_valid_ip(ip: str) -> bool:
 class logger:
 	@staticmethod
 	def _log(*args, mode=logging.info):
-		mode(" ".join([str(i) for i in args]))
+		if not RUNNING_BUNDLE: print(*args)
+		if LOG_TO_FILE: mode(" ".join([str(i) for i in args]))
 
 	@staticmethod
 	def log(*args):

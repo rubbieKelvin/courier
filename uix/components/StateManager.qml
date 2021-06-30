@@ -14,12 +14,8 @@ QtObject {
 		if (server.run()) {
 			// create client
 			client.connect_to(":self")
+			waitingForAuth = true
 
-			if (password.length > 0) {
-				waitingForAuth = true
-			} else {
-				handshakeDone(true)
-			}
 			return true
 		} else {
 			return false
@@ -54,7 +50,7 @@ QtObject {
 				peermodel.append(peer)
 			}
 
-			function onContactListRecieved(message) {
+			function onContactListReceived(message) {
 				const contact_list = message.body
 				contact_list.forEach(function (peer) {
 					peermodel.append(peer)
@@ -62,4 +58,15 @@ QtObject {
 			}
 		}
 	]
+
+	onHandshakeDone: {
+		if (successful){
+			// update profile
+			const profile = {
+				"username": helper.hostname()
+			}
+			console.log(`sending profile to server: ${JSON.stringify(profile)}`)
+			client.update_profile(profile)
+		}
+	}
 }

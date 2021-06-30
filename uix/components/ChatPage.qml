@@ -4,7 +4,15 @@ import QtQuick.Layouts 1.11
 
 Page {
 	id: root
-	required property var userdata
+	required property var user
+
+	function merge(){
+		username_label.text = Qt.binding(
+			function(){
+				return user.username
+			}
+		)
+	}
 
 	ColumnLayout {
 		anchors.fill: parent
@@ -17,10 +25,11 @@ Page {
 			Layout.fillWidth: true
 
 			Label {
+				id: username_label
 				width: 372
 				height: 11
 				font.pixelSize: 12
-				text: userdata.username
+				text: user.username
 				anchors.verticalCenter: parent.verticalCenter
 			}
 		}
