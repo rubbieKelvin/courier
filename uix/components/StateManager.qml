@@ -65,7 +65,6 @@ QtObject {
 			const profile = {
 				"username": helper.hostname()
 			}
-			console.log(`sending profile to server: ${JSON.stringify(profile)}`)
 			client.update_profile(profile)
 		}
 	}

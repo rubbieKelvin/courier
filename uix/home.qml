@@ -46,15 +46,17 @@ Page {
 					}
 
 					Label {
-						text: {
-							if (server.running)
-								return `${helper.hostname()}\n${helper.ip()}`
-							else
-								return helper.hostname()
-						}
 						horizontalAlignment: Text.AlignRight
 						Layout.fillWidth: true
 						Layout.alignment: Qt.AlignRight | Qt.AlignVCenter
+
+						Component.onCompleted: {
+							if (server.running) {
+								text = `${helper.hostname()}\n${helper.ip()}`
+							}else{
+								text = helper.hostname()
+							}
+						}
 					}
 				}
 

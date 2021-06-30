@@ -65,7 +65,7 @@ main(){
 		python main.py
 	else
 		echo "👀 running executable..."
-		if ./build/Courier > runtime.build.log; then
+		if ./build/Courier; then
 			echo "🎉 app ran succesfully!"
 		else
 			echo "😭 there was a problem while running app"

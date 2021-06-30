@@ -39,9 +39,9 @@ Page {
 			}
 
 			Label {
-				text: helper.hostname()
 				Layout.alignment: Qt.AlignRight | Qt.AlignVCenter
 				font.pointSize: 12
+				Component.onCompleted: helper.hostname()
 			}
 		}
 
@@ -136,11 +136,12 @@ Page {
 
 	Label {
 		opacity: 0.8
-		text: qsTr(`network: ${helper.hostname()}\nip: ${helper.ip()}`)
 		anchors.left: parent.left
 		anchors.bottom: parent.bottom
 		anchors.bottomMargin: 10
 		anchors.leftMargin: 10
+
+		Component.onCompleted: text = `network: ${helper.hostname()}\nip: ${helper.ip()}`
 	}
 }
 

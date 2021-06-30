@@ -51,9 +51,9 @@ Page {
 			TextField {
 				id: hostname_field
 				width: parent.width
-				text: helper.hostname()
 				placeholderText: qsTr("Hostname or IPv4 address...")
 				enabled: button1.enabled
+				Component.onCompleted: text = helper.hostname()
 			}
 			spacing: 2
 		}

@@ -52,11 +52,14 @@ Page {
 
 	Label {
 		opacity: 0.8
-		text: `network: ${helper.hostname()}\nip: ${helper.ip()}`
 		anchors.left: parent.left
 		anchors.bottom: parent.bottom
 		anchors.bottomMargin: 10
 		anchors.leftMargin: 10
+
+		Component.onCompleted: {
+			text = `network: ${helper.hostname()}\nip: ${helper.ip()}`
+		}
 	}
 }
 

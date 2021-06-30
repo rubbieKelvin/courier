@@ -1,5 +1,6 @@
 # rubbie kelvin
 # This Python file uses the following encoding: utf-8
+import os
 import sys
 
 # noinspection PyUnresolvedReferences
@@ -14,6 +15,11 @@ from PySide2 import QtGui
 from lib.helper import Helper
 from lib.server import CourierServer
 from lib.client import CourierClient
+
+
+# resolve Warning: Ignoring XDG_SESSION_TYPE=wayland on Gnome. Use QT_QPA_PLATFORM=wayland to run on Wayland anyway.
+if sys.platform == 'linux':
+    os.environ["XDG_SESSION_TYPE"] = "gnome"
 
 if __name__ == "__main__":
     # core init
