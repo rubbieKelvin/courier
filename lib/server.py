@@ -138,15 +138,15 @@ class CourierServer(QWebSocketServer):
 		password = message.body
 		if password == self.password:
 			client_dummy = CourierClientDummy(client)
-			self.add_client(client_dummy)
-			return client.sendTextMessage(str(
+			client.sendTextMessage(str(
 				Text(
 					CourierServer.HANDSHAKE_SUCCESSFULL,
 					intent=INTENT_HANDSHAKE,
 					client=client_dummy.to_dict()
 				)
 			))
-		return client.sendTextMessage(str(Text(CourierServer.HANDSHAKE_UNSUCCESSFULL, intent=INTENT_HANDSHAKE)))
+			self.add_client(client_dummy)
+		client.sendTextMessage(str(Text(CourierServer.HANDSHAKE_UNSUCCESSFULL, intent=INTENT_HANDSHAKE)))
 
 	def handle_broadcast_intent(self, client: QWebSocket, message: Text):
 		client_dummy = self.get_client_dummy_from_qwebsocket_object(client)
