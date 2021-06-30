@@ -8,7 +8,7 @@ main(){
 	if [[ -f .qrc ]]; then
 		echo "👀 compiling .qrc to python file..."
 		if pyside2-rcc \
-			--compress-algo none \
+			--compress-algo zlib \
 			-g python \
 			.qrc -o qrc.py > /dev/null; then
 			echo "✅ compiled .qrc -> qrc.py"
@@ -51,7 +51,7 @@ main(){
 			cp -r dist/ build
 			rm -r dist/
 
-			echo "✅ built executable. at build/Courier"
+			echo "✅ built executable. at build/"
 		else
 			echo "❌ couldnt build executable..."
 			return 1
@@ -59,17 +59,10 @@ main(){
 	fi
 
 
-	# run result
+	# run result if not building
 	if [[ -z "$1" ]]; then
 		echo "👀 running python script..."
 		python main.py
-	else
-		echo "👀 running executable..."
-		if ./build/Courier; then
-			echo "🎉 app ran succesfully!"
-		else
-			echo "😭 there was a problem while running app"
-		fi
 	fi
 }
 

@@ -9,5 +9,6 @@
         <file>uix/components/ChatPage.qml</file>
         <file>uix/join_server.qml</file>
         <file>uix/scripts/helper.js</file>
+        <file>uix/components/MessageBubble.qml</file>
     </qresource>
 </RCC>
