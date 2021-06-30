@@ -107,7 +107,6 @@ Page {
 
 			Button {
 				id: button
-				enabled: button1.enabled
 				text: qsTr("Cancel")
 				Layout.fillWidth: false
 				onClicked: mainstack_.pop()

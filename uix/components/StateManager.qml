@@ -29,8 +29,8 @@ QtObject {
 	}
 
 	function connectToServer(hostname) {
-		client.connect_to(hostname)
-		waitingForAuth = true
+		waitingForAuth = client.connect_to(hostname)
+		if (!waitingForAuth) handshakeDone(false)
 	}
 
 	readonly property list<Connections> connections: [

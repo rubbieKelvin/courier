@@ -42,17 +42,19 @@ class CourierClient(QWebSocket):
 	def data(self) -> dict:
 		return self.data_
 
-	@Slot(str)
-	def connect_to(self, hostname: str):
+	@Slot(str, result=bool)
+	def connect_to(self, hostname: str) -> bool:
 		# hostaname might be a comuter network name or ipv4 address
 		if is_valid_ip(hostname):
 			target_ip = hostname
 		else:
 			hostname = socket.gethostname() if (hostname == ":self") else hostname
-			target_ip = socket.gethostbyname(hostname)
+			try: target_ip = socket.gethostbyname(hostname)
+			except socket.gaierror as e: return False
 
 		url = QUrl(f"ws://{target_ip}:{PORT}")
 		self.open(url)
+		return True
 
 	@Slot(str, result=int)
 	def broadcast(self, text: str) -> int:
