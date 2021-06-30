@@ -7,6 +7,7 @@ from typing import Set
 
 from PySide2.QtCore import Slot
 from PySide2.QtCore import Signal
+from PySide2.QtCore import Property
 from PySide2.QtCore import QByteArray
 from PySide2.QtNetwork import QHostAddress
 from PySide2.QtWebSockets import QWebSocket
@@ -44,11 +45,18 @@ class CourierServer(QWebSocketServer):
 
 	def __init__(self):
 		super(CourierServer, self).__init__("courier", QWebSocketServer.NonSecureMode)
-		self.newConnection.connect(self.on_new_connection)
 		self.clients: Set[CourierClientDummy] = set()
 		self.password = ""
+		self._running = False
 
-	started = Signal()
+		self.newConnection.connect(self.on_new_connection)
+		self.closed.connect(self.on_connection_closed)
+
+	runningChanged = Signal(bool)
+
+	@Property(bool, notify=runningChanged)
+	def running(self) -> bool:
+		return self._running and self.isListening()
 
 	@Slot(str)
 	def set_password(self, password: str):
@@ -62,7 +70,9 @@ class CourierServer(QWebSocketServer):
 
 		if self.listen(QHostAddress(host_ip), PORT):
 			logger.log(f"running on {self.serverUrl()}")
-			self.started.emit()
+
+			self._running = True
+			self.runningChanged.emit(True)
 			return True
 		
 		logger.log(f"could not run server.")
@@ -100,6 +110,10 @@ class CourierServer(QWebSocketServer):
 		client.disconnected.connect(self.on_client_disconnected)
 		client.textMessageReceived.connect(self.on_text_received)
 		client.binaryMessageReceived.connect(self.on_binary_received)
+
+	def on_connection_closed(self):
+		self._running = False
+		self.runningChanged.emit(False)
 
 	def on_client_disconnected(self):
 		client: QWebSocket = self.sender()

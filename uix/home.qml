@@ -16,7 +16,7 @@ Page {
 			color: "#f6f6f6"
 			Layout.fillHeight: true
 
-			ColumnLayout {
+			Column {
 				id: columnLayout
 				anchors.fill: parent
 				anchors.margins: 25
@@ -24,30 +24,36 @@ Page {
 
 				RowLayout {
 					id: rowLayout
-					Layout.fillWidth: true
+					width: parent.width
+					spacing: 0
+					Layout.fillWidth: false
 					Layout.alignment: Qt.AlignLeft | Qt.AlignTop
 
-					Column {
+					ColumnLayout {
 						id: column
 						Layout.fillWidth: true
 						Layout.alignment: Qt.AlignLeft | Qt.AlignTop
 
 						Label {
-							id: label
 							text: qsTr("Courier")
 							font.pointSize: 14
 						}
 
 						Label {
-							id: label1
 							text: qsTr("stuffsbyrubbie")
 							font.pointSize: 10
 						}
 					}
 
 					Label {
-						id: label2
-						text: qsTr("rubbie")
+						text: {
+							if (server.running)
+								return `${helper.hostname()}\n${helper.ip()}`
+							else
+								return helper.hostname()
+						}
+						horizontalAlignment: Text.AlignRight
+						Layout.fillWidth: true
 						Layout.alignment: Qt.AlignRight | Qt.AlignVCenter
 					}
 				}
@@ -151,7 +157,7 @@ Page {
 
 /*##^##
 Designer {
-	D{i:0;autoSize:true;formeditorZoom:0.75;height:600;width:1000}D{i:3}D{i:1}
+	D{i:0;autoSize:true;formeditorZoom:0.66;height:600;width:1000}
 }
 ##^##*/
 

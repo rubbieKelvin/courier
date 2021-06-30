@@ -133,6 +133,15 @@ Page {
 
 		anchors.horizontalCenter: parent.horizontalCenter
 	}
+
+	Label {
+		opacity: 0.8
+		text: qsTr(`network: ${helper.hostname()}\nip: ${helper.ip()}`)
+		anchors.left: parent.left
+		anchors.bottom: parent.bottom
+		anchors.bottomMargin: 10
+		anchors.leftMargin: 10
+	}
 }
 
 /*##^##
