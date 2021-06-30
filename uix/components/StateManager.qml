@@ -9,6 +9,12 @@ QtObject {
 	signal requireAuth
 	signal handshakeDone(bool successful)
 
+	function resetData(){
+		waitingForAuth = false
+		peermodel.clear()
+		chatmodel.clear()
+	}
+
 	function createServer(password) {
 		server.set_password(password)
 		if (server.run()) {

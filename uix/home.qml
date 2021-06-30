@@ -20,13 +20,14 @@ Page {
 				id: columnLayout
 				anchors.fill: parent
 				anchors.margins: 25
+				clip: true
 				spacing: 15
 
 				RowLayout {
 					id: rowLayout
 					width: parent.width
 					spacing: 0
-					Layout.fillWidth: false
+					Layout.fillWidth: true
 					Layout.alignment: Qt.AlignLeft | Qt.AlignTop
 
 					ColumnLayout {
@@ -53,7 +54,7 @@ Page {
 						Component.onCompleted: {
 							if (server.running) {
 								text = `${helper.hostname()}\n${helper.ip()}`
-							}else{
+							} else {
 								text = helper.hostname()
 							}
 						}
@@ -155,12 +156,12 @@ Page {
 
 				function onClientProfileUpdateReceived(message) {
 					const data = message.body
-					
+
 					// update client profile in chat page
 					// look for item in chat_stack.pages that match unique_id
 					for (var i = 0; i < chat_stack.pages.length; i++) {
 						const page = chat_stack.pages[i]
-						if (page.user.unique_id == data.unique_id) {
+						if (page.user.unique_id === data.unique_id) {
 							page.user = data
 							page.merge()
 							break
@@ -169,9 +170,9 @@ Page {
 
 					// update client profile in model
 					// loop though statemanager_.peermodel and then set the matching data
-					for (var j=0; j<statemanager_.peermodel.count; j++) {
+					for (var j = 0; j < statemanager_.peermodel.count; j++) {
 						const modelItem = statemanager_.peermodel.get(j)
-						if (modelItem.unique_id == data.unique_id){
+						if (modelItem.unique_id === data.unique_id) {
 							statemanager_.peermodel.set(j, data)
 							break
 						}
@@ -180,11 +181,75 @@ Page {
 			}
 		}
 	}
+
+	Rectangle {
+		id: tell_rect
+		y: 530
+		width: 291
+		height: 55
+		color: "#4dff0000"
+		border.width: 0
+		anchors.left: parent.left
+		anchors.bottom: parent.bottom
+		anchors.leftMargin: 15
+		anchors.bottomMargin: 15
+		visible: false
+		enabled: visible
+
+		RowLayout {
+			anchors.fill: parent
+			anchors.margins: 5
+			spacing: 5
+
+			Label {
+				color: "#ff0000"
+				text: qsTr("Server Disconnected. most features have been disabled")
+				verticalAlignment: Text.AlignVCenter
+				wrapMode: Text.WordWrap
+				font.pointSize: 12
+				Layout.fillHeight: true
+				Layout.fillWidth: true
+			}
+
+			Button {
+				id: button
+				text: qsTr("Leave")
+				flat: false
+				contentItem: Label {
+					color: "#ffffff"
+					font: parent.font
+					text: parent.text
+					anchors.fill: parent
+					horizontalAlignment: Text.AlignHCenter
+					verticalAlignment: Text.AlignVCenter
+				}
+
+				background: Rectangle {
+					anchors.fill: parent
+					color: parent.down ? "#99ff0000" : "#6aff0000"
+				}
+
+				onClicked: {
+					statemanager_.resetData()
+					mainstack.pop()
+				}
+			}
+		}
+	}
+
+	Connections {
+		target: client
+
+		function onDisconnected() {
+			// client disconnected
+			tell_rect.visible = true
+		}
+	}
 }
 
 /*##^##
 Designer {
-	D{i:0;autoSize:true;formeditorZoom:0.66;height:600;width:1000}
+	D{i:0;autoSize:true;formeditorZoom:0.75;height:600;width:1000}D{i:20}
 }
 ##^##*/
 

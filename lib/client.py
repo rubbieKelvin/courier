@@ -28,7 +28,6 @@ class CourierClient(QWebSocket):
 		super(CourierClient, self).__init__()
 		self.error.connect(self.on_error)
 		self.data_ = dict()
-		self.connected.connect(self.on_connected)
 		self.textMessageReceived.connect(self.on_text_received)
 		self.binaryMessageReceived.connect(self.on_binary_received)
 
@@ -72,9 +71,6 @@ class CourierClient(QWebSocket):
 		self.dataChanged.emit(self.data_)
 		self.sendTextMessage(
 			str(Text(self.data_, intent=INTENT_PROFILE_UPDATE)))
-
-	def on_connected(self):
-		pass
 
 	def on_error(self, error: QAbstractSocket.SocketError):
 		logger.error(f"error: {str(error)}")
