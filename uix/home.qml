@@ -7,9 +7,13 @@ import "./scripts/helper.js" as Helper
 Page {
 	id: root
 	readonly property StateManager statemanager_: statemanager
+	property string current_chat_uid: ""
 
 	RowLayout {
-		anchors.fill: parent
+		anchors.top: parent.top
+		anchors.left: parent.left
+		anchors.right: parent.right
+		anchors.bottom: tell_rect.top
 
 		Rectangle {
 			width: 250
@@ -109,9 +113,7 @@ Page {
 								anchors.fill: parent
 								hoverEnabled: true
 								cursorShape: Qt.PointingHandCursor
-								onClicked: {
-
-								}
+								onClicked: current_chat_uid = unique_id
 							}
 						}
 						model: statemanager_.peermodel
@@ -141,16 +143,37 @@ Page {
 					chat_stack.pages.push(page)
 			}
 
+			Connections{
+				target: root
+
+				function onCurrent_chat_uidChanged(){
+					// if chat_stack.pages > 1, ...
+					// lets look for the index of the page in chat_stack.children...
+					// that has the user.unique_id == current_chat_uid
+					if (chat_stack.pages.length > 1){
+						for (let i=0; i<chat_stack.children.length; i++){
+							const page = chat_stack.children[i]
+							if (page.user.unique_id == current_chat_uid){
+								chat_stack.currentIndex = i
+								break
+							}
+						}
+					}
+				}
+			}
+
 			Connections {
 				target: client
 
 				function onContactListReceived(message) {
 					message.body.forEach(function (data) {
+						if (current_chat_uid === "") current_chat_uid = data.unique_id
 						chat_stack.addClient(data)
 					})
 				}
 
 				function onNewPeerJoined(message) {
+					if (current_chat_uid === "") current_chat_uid = message.body.unique_id
 					chat_stack.addClient(message.body)
 				}
 
@@ -178,21 +201,31 @@ Page {
 						}
 					}
 				}
+
+				function onPrivateMessageReceived(message) {
+					// find the page this message belongs to,
+					// and then put it in the chat model bbelonging to the page
+
+					for (var i=0; i<chat_stack.pages.length; i++) {
+						const page = chat_stack.pages[i]
+						if (page.user.unique_id === message.body.sender_uid){
+							page.chatmodel.append({message: message})
+						}
+					}
+				}
 			}
 		}
 	}
 
 	Rectangle {
 		id: tell_rect
-		y: 530
-		width: 291
-		height: 55
+		width: parent.width
+		height: visible ? 36 : 0
 		color: "#4dff0000"
 		border.width: 0
 		anchors.left: parent.left
+		anchors.right: parent.right
 		anchors.bottom: parent.bottom
-		anchors.leftMargin: 15
-		anchors.bottomMargin: 15
 		visible: false
 		enabled: visible
 
@@ -206,7 +239,7 @@ Page {
 				text: qsTr("Server Disconnected. most features have been disabled")
 				verticalAlignment: Text.AlignVCenter
 				wrapMode: Text.WordWrap
-				font.pointSize: 12
+				font.pointSize: 9
 				Layout.fillHeight: true
 				Layout.fillWidth: true
 			}

@@ -17,7 +17,9 @@ from .messages import Text
 from .messages import INTENT_NEW_PEER
 from .messages import INTENT_HANDSHAKE
 from .messages import INTENT_BROADCAST
+from .messages import PrivateTextMessage
 from .messages import INTENT_PROFILE_UPDATE
+from .messages import INTENT_PRIVATE_MESSAGE
 from .messages import INTENT_CONTACT_LIST_REQUEST
 
 
@@ -35,6 +37,9 @@ class CourierClientDummy:
 			username=self.username,
 			unique_id=self.unique_id
 		)
+
+	def __repr__(self) -> str:
+		return f"<ClientD id={self.unique_id} username={self.username}>"
 
 
 class CourierServer(QWebSocketServer):
@@ -122,7 +127,6 @@ class CourierServer(QWebSocketServer):
 	def on_text_received(self, text: str):
 		client: QWebSocket = self.sender()
 		message = Text.fromStr(text)
-		logger.log(message)
 
 		if message.intent == INTENT_HANDSHAKE:
 			self.handle_handshake_intent(client, message)
@@ -130,6 +134,8 @@ class CourierServer(QWebSocketServer):
 			self.handle_broadcast_intent(client, message)
 		elif message.intent == INTENT_PROFILE_UPDATE:
 			self.handle_profile_update_intent(client, message)
+		elif message.intent == INTENT_PRIVATE_MESSAGE:
+			self.handle_private_message(client, PrivateTextMessage.fromStr(text))
 
 	def on_binary_received(self, data: QByteArray):
 		client: QWebSocket = self.sender()
@@ -169,3 +175,15 @@ class CourierServer(QWebSocketServer):
 
 	def get_client_dummy_from_qwebsocket_object(self, client: QWebSocket) -> CourierClientDummy:
 		return list(filter(lambda d: d.client == client, self.clients))[0]
+
+	def handle_private_message(self, client: QWebSocket, message: PrivateTextMessage):
+		client_dummy = self.get_client_dummy_from_qwebsocket_object(client)
+		message.sign(client_dummy.unique_id)
+		
+		# send to receiver
+		receiver: QWebSocket = None
+		for dummy in self.clients:
+			if dummy.unique_id == message.body.get("receiver_uid"):
+				receiver = dummy.client
+				receiver.sendTextMessage(str(message))
+				break

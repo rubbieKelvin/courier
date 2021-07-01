@@ -5,6 +5,7 @@ import QtQuick.Layouts 1.11
 Page {
 	id: root
 	required property var user
+	property ListModel chatmodel: ListModel{}
 
 	function merge(){
 		username_label.text = Qt.binding(
@@ -44,50 +45,25 @@ Page {
 			ScrollBar.vertical.policy: ScrollBar.AsNeeded
 
 			ListView {
-				id: listView
+				id: chat_view
 				width: 110
 				height: 160
 				clip: true
-				delegate: Item {
-					x: 5
-					width: 80
-					height: 40
-					Row {
-						id: row1
-						spacing: 10
-						Rectangle {
-							width: 40
-							height: 40
-							color: colorCode
-						}
+				delegate: MessageBubble{
+					width: parent.width
 
-						Text {
-							text: name
-							anchors.verticalCenter: parent.verticalCenter
-							font.bold: true
-						}
+					Component.onCompleted: {
+						pm=message
 					}
 				}
-				model: ListModel {
-					ListElement {
-						name: "Grey"
-						colorCode: "grey"
-					}
+				model: chatmodel
 
-					ListElement {
-						name: "Red"
-						colorCode: "red"
-					}
-
-					ListElement {
-						name: "Blue"
-						colorCode: "blue"
-					}
-
-					ListElement {
-						name: "Green"
-						colorCode: "green"
-					}
+				Connections {
+				    target: client
+				    
+				    function onPrivateMessageSent(message) {
+				    	chatmodel.append({message: message})
+				    }
 				}
 			}
 		}
@@ -107,9 +83,14 @@ Page {
 					anchors.fill: parent
 
 					TextField {
-						id: textField
+						id: text_message
 						Layout.fillWidth: true
-						placeholderText: qsTr("Text Field")
+						placeholderText: qsTr("Enter message...")
+
+						onAccepted: {
+							client.sendPrivateMessage(text, user.unique_id)
+							text = ""
+						}
 					}
 
 					Button {

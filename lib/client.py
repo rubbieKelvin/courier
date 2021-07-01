@@ -1,4 +1,5 @@
 import socket
+from uuid import uuid4
 
 from . import PORT
 from . import logger
@@ -17,7 +18,9 @@ from .messages import Text
 from .messages import INTENT_NEW_PEER
 from .messages import INTENT_BROADCAST
 from .messages import INTENT_HANDSHAKE
+from .messages import PrivateTextMessage
 from .messages import INTENT_PROFILE_UPDATE
+from .messages import INTENT_PRIVATE_MESSAGE
 from .messages import INTENT_CONTACT_LIST_REQUEST
 
 from .server import CourierServer
@@ -35,7 +38,9 @@ class CourierClient(QWebSocket):
 	newPeerJoined = Signal("QVariant")
 	broadcastReceived = Signal("QVariant")
 	handshakeReceived = Signal("QVariant")
+	privateMessageSent = Signal("QVariant")
 	contactListReceived = Signal("QVariant")
+	privateMessageReceived = Signal("QVariant")
 	clientProfileUpdateReceived = Signal("QVariant")
 
 	@Property("QVariant", notify=dataChanged)
@@ -60,6 +65,13 @@ class CourierClient(QWebSocket):
 	def broadcast(self, text: str) -> int:
 		return self.sendTextMessage(str(Text(text)))
 
+	@Slot(str, str)
+	def sendPrivateMessage(self, text: str, to: str):
+		message = PrivateTextMessage(uuid4(), text, to)
+		# message will be signed at the server
+		self.sendTextMessage(str(message))
+		self.privateMessageSent.emit(message.toDict())
+
 	@Slot(str)
 	def authenticate(self, password: str):
 		# sending raw passwords over network is a bad idea
@@ -78,8 +90,6 @@ class CourierClient(QWebSocket):
 		logger.error(f"error: {str(error)}")
 
 	def on_text_received(self, text: str):
-		logger.log(f"Received: {text}")
-
 		message = Text.fromStr(text)
 
 		if message.intent == INTENT_HANDSHAKE:
@@ -92,6 +102,8 @@ class CourierClient(QWebSocket):
 			self.handle_contact_list_request(message)
 		elif message.intent == INTENT_PROFILE_UPDATE:
 			self.handle_client_profile_update(message)
+		elif message.intent == INTENT_PRIVATE_MESSAGE:
+			self.handle_pm_intent(PrivateTextMessage.fromStr(text))
 
 	def on_binary_received(self, data: QByteArray):
 		pass
@@ -112,3 +124,11 @@ class CourierClient(QWebSocket):
 
 	def handle_client_profile_update(self, message: Text):
 		self.clientProfileUpdateReceived.emit(message.toDict())
+
+	def handle_pm_intent(self, message: PrivateTextMessage):
+		if not message.signer:
+			logger.warn(
+				"there's a problem with the recieved message.",
+				"message has not been signed"
+			)
+		self.privateMessageReceived.emit(message.toDict())

@@ -4,7 +4,6 @@ QtObject {
 	id: root
 	property bool waitingForAuth: false
 	readonly property ListModel peermodel: ListModel {}
-	readonly property ListModel chatmodel: ListModel {}
 
 	signal requireAuth
 	signal handshakeDone(bool successful)
@@ -12,7 +11,6 @@ QtObject {
 	function resetData(){
 		waitingForAuth = false
 		peermodel.clear()
-		chatmodel.clear()
 	}
 
 	function createServer(password) {
@@ -61,6 +59,14 @@ QtObject {
 				contact_list.forEach(function (peer) {
 					peermodel.append(peer)
 				})
+			}
+
+			function onError(e){
+				if (e === 0 || e === 2){
+					// QAbstractSocket::ConnectionRefusedError	0	The connection was refused by the peer (or timed out).
+					// QAbstractSocket::HostNotFoundError		2	The host address was not found.
+					handshakeDone(false)
+				}
 			}
 		}
 	]
