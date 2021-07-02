@@ -1,6 +1,33 @@
 # rubbie kelvin
 
 main(){
+	# setup environment
+	echo "🎭 setting up virtual environment..."
+
+	if [[ -d venv ]]; then
+		echo "⚡ found existing venv folder."
+		echo "⚡ activating virtual environment"
+		source venv/bin/activate
+	else
+		echo "👀 creating virtual environment..."
+		if python -m venv venv; then
+			echo "*" > venv/.gitignore
+			echo "⚡ activating virtual environment"
+			source venv/bin/activate
+		else
+			echo "❌ coundn't create virtual envionment"
+			return
+		fi
+	fi
+
+	echo "👀 installing neccessary packages"
+	if python -m pip install -r requirements.txt; then
+		echo "" > /dev/null
+	else
+		echo "❌ couldnt install packages"
+		return
+	fi
+	
 	# check for ".qrc" file in workspace folder
 	# if there's a .qrc file... compile it into a python file
 
@@ -68,3 +95,5 @@ main(){
 
 # run main
 main $1
+# close venv
+deactivate

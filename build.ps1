@@ -1,6 +1,43 @@
 # rubbie kelvin
 
 function Main($package) {
+	Write-Host "🎭 setting up virtual environment..."
+
+	if (Test-Path -Path ./venv){
+		Write-Host "⚡ found existing venv folder."
+		Write-Host "⚡ activating virtual environment"
+		
+		pwsh -File ./venv/bin/Activate.ps1 > $null
+		if (-Not $?){
+			pwsh.exe -File ./venv/bin/Activate.ps1
+		}
+	}else{
+		Write-Host "👀 creating virtual environment..."
+		if (python -m venv venv){
+
+			# DEBUG: this line might not work on windows
+			echo "*" > venv/.gitignore
+
+			Write-Host "⚡ activating virtual environment"
+			
+			pwsh -File ./venv/bin/Activate.ps1 > $null
+			if (-Not $?){
+				pwsh.exe -File ./venv/bin/Activate.ps1
+			}
+		}else{
+			Write-Host "❌ coundn't create virtual envionment"
+			return
+		}
+	}
+
+	Write-Host "👀 installing neccessary packages"
+	if (python -m pip install -r ./requirements.txt){
+		Write-Host "" > $null
+	}else{
+		Write-Host "❌ couldnt install packages"
+		return
+	}
+
 	# check for ".qrc" file in workspace folder
 	# if there's a .qrc file... compile it into a python file
 
