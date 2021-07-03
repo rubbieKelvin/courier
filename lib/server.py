@@ -14,6 +14,7 @@ from PySide2.QtWebSockets import QWebSocket
 from PySide2.QtWebSockets import QWebSocketServer
 
 from .messages import Text
+from .messages import Binary
 from .messages import INTENT_NEW_PEER
 from .messages import INTENT_HANDSHAKE
 from .messages import INTENT_BROADCAST
@@ -44,9 +45,9 @@ class CourierClientDummy:
 
 class CourierServer(QWebSocketServer):
 	HANDSHAKE_AUTH = "$auth"  # tell the client there's password on this server
-	HANDSHAKE_NO_AUTH = "$no-auth"  # tell client there's no pasword on this server
-	HANDSHAKE_SUCCESSFULL = "$successfull"  # tell client the handshake was successful
-	HANDSHAKE_UNSUCCESSFULL = "$unsuccessfull"  # tell client the handshake was unsuccessful
+	HANDSHAKE_NO_AUTH = "$no-auth"  # tell client there's no password on this server
+	HANDSHAKE_SUCCESSFUL = "$successful"  # tell client the handshake was successful
+	HANDSHAKE_UNSUCCESSFUL = "$unsuccessful"  # tell client the handshake was unsuccessful
 
 	def __init__(self):
 		super(CourierServer, self).__init__("courier", QWebSocketServer.NonSecureMode)
@@ -67,6 +68,7 @@ class CourierServer(QWebSocketServer):
 	def set_password(self, password: str):
 		self.password = password
 
+	# noinspection PyTypeChecker
 	@Slot(result=bool)
 	def run(self):
 		# get host ip
@@ -77,6 +79,7 @@ class CourierServer(QWebSocketServer):
 			logger.log(f"running on {self.serverUrl()}")
 
 			self._running = True
+			# noinspection PyUnresolvedReferences
 			self.runningChanged.emit(True)
 			return True
 		
@@ -115,13 +118,16 @@ class CourierServer(QWebSocketServer):
 
 		client.disconnected.connect(self.on_client_disconnected)
 		client.textMessageReceived.connect(self.on_text_received)
+		# noinspection PyUnresolvedReferences
 		client.binaryMessageReceived.connect(self.on_binary_received)
 
 	def on_connection_closed(self):
 		self._running = False
+		# noinspection PyUnresolvedReferences
 		self.runningChanged.emit(False)
 
 	def on_client_disconnected(self):
+		# noinspection PyUnusedLocal
 		client: QWebSocket = self.sender()
 
 	def on_text_received(self, text: str):
@@ -139,6 +145,18 @@ class CourierServer(QWebSocketServer):
 
 	def on_binary_received(self, data: QByteArray):
 		client: QWebSocket = self.sender()
+		client_dummy = self.get_client_dummy_from_qwebsocket_object(client)
+
+		binary: Binary = Binary.fromQByteArray(data)
+		binary.sign(client_dummy.unique_id)
+
+		receiver_uid = binary.body.get("receiver_uid")
+		receiver: QWebSocket
+		for dummy in self.clients:
+			if dummy.unique_id == receiver_uid:
+				receiver = dummy.client
+				receiver.sendBinaryMessage(binary.toQByteArray())
+				return
 
 	def handle_handshake_intent(self, client: QWebSocket, message: Text):
 		password = message.body
@@ -146,13 +164,13 @@ class CourierServer(QWebSocketServer):
 			client_dummy = CourierClientDummy(client)
 			client.sendTextMessage(str(
 				Text(
-					CourierServer.HANDSHAKE_SUCCESSFULL,
+					CourierServer.HANDSHAKE_SUCCESSFUL,
 					intent=INTENT_HANDSHAKE,
 					client=client_dummy.to_dict()
 				)
 			))
 			self.add_client(client_dummy)
-		client.sendTextMessage(str(Text(CourierServer.HANDSHAKE_UNSUCCESSFULL, intent=INTENT_HANDSHAKE)))
+		client.sendTextMessage(str(Text(CourierServer.HANDSHAKE_UNSUCCESSFUL, intent=INTENT_HANDSHAKE)))
 
 	def handle_broadcast_intent(self, client: QWebSocket, message: Text):
 		client_dummy = self.get_client_dummy_from_qwebsocket_object(client)
@@ -173,6 +191,7 @@ class CourierServer(QWebSocketServer):
 			if dummy != client_dummy:
 				dummy.client.sendTextMessage(str(message))
 
+	# noinspection SpellCheckingInspection
 	def get_client_dummy_from_qwebsocket_object(self, client: QWebSocket) -> CourierClientDummy:
 		return list(filter(lambda d: d.client == client, self.clients))[0]
 
@@ -181,9 +200,9 @@ class CourierServer(QWebSocketServer):
 		message.sign(client_dummy.unique_id)
 		
 		# send to receiver
-		receiver: QWebSocket = None
+		receiver: QWebSocket
 		for dummy in self.clients:
 			if dummy.unique_id == message.body.get("receiver_uid"):
 				receiver = dummy.client
 				receiver.sendTextMessage(str(message))
-				break
+				return

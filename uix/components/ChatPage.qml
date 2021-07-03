@@ -110,7 +110,8 @@ Page {
 		folder: shortcuts.home
 		selectMultiple: false
 		onAccepted: {
-			client.sendFile(fileDialog.fileUrl)
+			client.sendFile(text_message.text, fileDialog.fileUrl, user.unique_id)
+			text_message.text = ""
 		}
 		onRejected: {
 

@@ -39,7 +39,7 @@ QtObject {
 				if (root.waitingForAuth) {
 					if (message.body === "$auth") {
 						requireAuth()
-					} else if (message.body === "$successfull"
+					} else if (message.body === "$successful"
 							   || message.body === "$no-auth") {
 						root.waitingForAuth = false
 						handshakeDone(true)

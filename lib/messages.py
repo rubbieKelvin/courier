@@ -102,6 +102,8 @@ class Binary(PrivateTextMessage):
 
 	if not QDir(root).exists():
 		os.mkdir(root)
+	if not QDir(os.path.join(root, "sent")).exists():
+		os.mkdir(os.path.join(root, "sent"))
 
 	def __init__(self, id_: uuid.UUID, message: str, receiver_uid: str, binary: QByteArray, extension: str):
 		super(Binary, self).__init__(id_, message, receiver_uid)
@@ -154,6 +156,7 @@ class Binary(PrivateTextMessage):
 		)
 
 		binary_message.body["hash"] = hash_
+		binary_message.body["sender_uid"] = body.get("sender_uid")
 		binary_message.meta["hash_verified"] = hash_ == QCryptographicHash.hash(binary, QCryptographicHash.Sha256)
 
 		del data["body"]
@@ -170,11 +173,17 @@ class Binary(PrivateTextMessage):
 
 	def toDict(self) -> dict:
 		result = super().toDict()
-		del result["body"]["hash"]
+
+		try:
+			# just to avoid errors when calling this method from __str__
+			del result["body"]["hash"]
+		except KeyError:
+			pass
 
 		# save binary to file
+		filepath = Binary.root if self.signer else os.path.join(Binary.root, "sent")
 		filename = result["body"]["message_id"]+result["body"]["extension"]
-		filename = os.path.join(Binary.root, filename)
+		filename = os.path.join(filepath, filename)
 		file = QFile(filename)
 
 		if not file.exists():

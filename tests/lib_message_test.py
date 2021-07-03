@@ -37,10 +37,9 @@ class TestBinaryMessage(unittest.TestCase):
 		self.assertTrue(type(binary.binary) == QByteArray)
 		self.assertTrue(binary.meta.get("hash_verified"))
 
-
 	def test_Restructuring(self):
-		binary = self.createBinary()
-		binary = binary.toQByteArray()
+		binary: Binary = self.createBinary()
+		binary: QByteArray = binary.toQByteArray()
 		binary: Binary = Binary.fromQByteArray(binary)
 
 		file = QFile(os.path.join(os.path.dirname(__file__), "data", "img-copy.png"))
@@ -55,4 +54,13 @@ class TestBinaryMessage(unittest.TestCase):
 		self.assertEqual(
 			binary.body.get("hash"),
 			QCryptographicHash.hash(binary.binary, QCryptographicHash.Sha256))
-		self.assertIn("f", binary.toDict())
+
+	# def test_Restructuring_Over_network(self):
+	# 	socket = QWebSocket()
+	# 	socketserver = QWebSocketServer(serverName="test_server", secureMode=QWebSocketServer.NonSecureMode)
+	#
+	# 	def
+	#
+	# 	if socketserver.listen(QHostAddress("localhost"), 1244):
+	# 		url = QUrl("ws://localhost:1244")
+	# 		socket.open(url)

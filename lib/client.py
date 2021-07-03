@@ -1,3 +1,4 @@
+import os
 import socket
 from uuid import uuid4
 
@@ -16,9 +17,9 @@ from PySide2.QtCore import QIODevice
 from PySide2.QtCore import QByteArray
 from PySide2.QtWebSockets import QWebSocket
 from PySide2.QtNetwork import QAbstractSocket
-from PySide2.QtCore import QCryptographicHash
 
 from .messages import Text
+from .messages import Binary
 from .messages import INTENT_NEW_PEER
 from .messages import INTENT_BROADCAST
 from .messages import INTENT_HANDSHAKE
@@ -31,24 +32,36 @@ from .server import CourierServer
 
 
 class FileTransferWorker(QThread):
-	def __init__(self, client: QWebSocket, file_url: QUrl):
+	def __init__(self, client: QWebSocket, file_url: QUrl, message: str, receiver_uid: str):
 		super(FileTransferWorker, self).__init__()
 		self.file_url = file_url
 		self.client = client
+		self.message = message
+		self.extension = os.path.splitext(file_url.toLocalFile())[-1]
+		self.receiver_uid = receiver_uid
 		self.finished.connect(lambda: print(f"finished thread handling {self.file_url}"))
 
-	hashCalculated = Signal(str)
+	payloadHandled = Signal(Binary)
 
 	def run(self):
-		file = QFile(self.file_url.toLocalFile())
-		byte_array: QByteArray
-		if file.exists():
-			if file.open(QIODevice.ReadOnly):
-				byte_array = file.readAll()
-				hash_: QByteArray = QCryptographicHash.hash(byte_array, QCryptographicHash.Sha256)
-				hash_: str = bytearray(hash_.toBase64()).decode("utf8")
-				self.hashCalculated.emit(hash_)
-				
+		local_file = self.file_url.toLocalFile()
+		file = QFile(local_file)
+
+		if not (file.exists() and file.open(QIODevice.ReadOnly)):
+			# noinspection PyUnresolvedReferences
+			return
+
+		byte_array = file.readAll()
+
+		binary: Binary = Binary(
+			id_=uuid4(),
+			message=self.message,
+			receiver_uid=self.receiver_uid,
+			binary=byte_array,
+			extension=self.extension)
+
+		# noinspection PyUnresolvedReferences
+		self.payloadHandled.emit(binary)
 
 
 class CourierClient(QWebSocket):
@@ -59,8 +72,10 @@ class CourierClient(QWebSocket):
 		self.textMessageReceived.connect(self.on_text_received)
 		self.binaryMessageReceived.connect(self.on_binary_received)
 
+	binarySent = Signal("QVariant")
 	dataChanged = Signal("QVariant")
 	newPeerJoined = Signal("QVariant")
+	binaryReceived = Signal("QVariant")
 	broadcastReceived = Signal("QVariant")
 	handshakeReceived = Signal("QVariant")
 	privateMessageSent = Signal("QVariant")
@@ -103,16 +118,26 @@ class CourierClient(QWebSocket):
 		# noinspection PyUnresolvedReferences
 		self.privateMessageSent.emit(message.toDict())
 
-	@Slot(str)
-	def sendFile(self, file_url: str):
-		file_sender = FileTransferWorker(QUrl(file_url))
+	@Slot(str, str, str)
+	def sendFile(self, message: str, file_url: str, to: str):
+		file_sender = FileTransferWorker(self, file_url=QUrl(file_url), message=message, receiver_uid=to)
 
 		def do_del():
 			logger.debug("deleting", file_sender)
 			file_sender.deleteLater()
 
 		file_sender.finished.connect(do_del)
+		# noinspection PyUnresolvedReferences
+		file_sender.payloadHandled.connect(self.binary_payload_handled)
 		file_sender.start()
+
+	# noinspection PyMethodMayBeStatic
+	def binary_payload_handled(self, binary: Binary):
+		byte_array = binary.toQByteArray()
+		self.sendBinaryMessage(byte_array)
+		# call a binary sent signal here
+		# noinspection PyUnresolvedReferences
+		self.binarySent.emit(binary.toDict())
 
 	@Slot(str)
 	def authenticate(self, password: str):
@@ -150,12 +175,20 @@ class CourierClient(QWebSocket):
 		elif message.intent == INTENT_PRIVATE_MESSAGE:
 			self.handle_pm_intent(PrivateTextMessage.fromStr(text))
 
+	# noinspection PyMethodMayBeStatic
 	def on_binary_received(self, data: QByteArray):
-		pass
+		logger.log("received binaries!")
+		binary: Binary = Binary.fromQByteArray(data)
+
+		# this will save the binary as file and feed the file path instead
+		binary_dict: dict = binary.toDict()
+		print(binary)
+		# noinspection PyUnresolvedReferences
+		self.binaryReceived.emit(binary_dict)
 
 	def handle_handshake_intent(self, message: Text):
 		go_on = (
-			message.body == CourierServer.HANDSHAKE_SUCCESSFULL or
+			message.body == CourierServer.HANDSHAKE_SUCCESSFUL or
 			message.body == CourierServer.HANDSHAKE_NO_AUTH)
 
 		if go_on:
