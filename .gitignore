@@ -85,3 +85,7 @@ Thumbs.db
 dist
 build
 *.spec
+
+# Where i put trash for testing and stuff
+.lab
+tests/data/img-copy.png

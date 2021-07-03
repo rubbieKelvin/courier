@@ -26,7 +26,12 @@ if __name__ == "__main__":
     app = QtGui.QGuiApplication(sys.argv)
     engine = QtQml.QQmlApplicationEngine()
 
-    # Q OBJECTs
+    # set prerequisites for Qml.Settings Module
+    app.setApplicationName("Courier")
+    app.setOrganizationName("stuffsbyrubbie")
+    app.setOrganizationDomain("com.stuffsbyrubbie.courier")
+
+    # Q OBJECT
     helper = Helper()
     server = CourierServer()
     client = CourierClient()

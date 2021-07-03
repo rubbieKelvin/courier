@@ -1,18 +1,17 @@
 import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.11
+import QtQuick.Dialogs 1.3
 
 Page {
 	id: root
 	required property var user
-	property ListModel chatmodel: ListModel{}
+	property ListModel chatmodel: ListModel {}
 
-	function merge(){
-		username_label.text = Qt.binding(
-			function(){
-				return user.username
-			}
-		)
+	function merge() {
+		username_label.text = Qt.binding(function () {
+			return user.username
+		})
 	}
 
 	ColumnLayout {
@@ -49,21 +48,23 @@ Page {
 				width: 110
 				height: 160
 				clip: true
-				delegate: MessageBubble{
+				delegate: MessageBubble {
 					width: parent.width
 
 					Component.onCompleted: {
-						pm=message
+						pm = message
 					}
 				}
 				model: chatmodel
 
 				Connections {
-				    target: client
-				    
-				    function onPrivateMessageSent(message) {
-				    	chatmodel.append({message: message})
-				    }
+					target: client
+
+					function onPrivateMessageSent(message) {
+						chatmodel.append({
+											 "message": message
+										 })
+					}
 				}
 			}
 		}
@@ -96,9 +97,23 @@ Page {
 					Button {
 						id: button
 						text: qsTr("send file")
+						onClicked: fileDialog.open()
 					}
 				}
 			}
+		}
+	}
+
+	FileDialog {
+		id: fileDialog
+		title: "Please choose a file"
+		folder: shortcuts.home
+		selectMultiple: false
+		onAccepted: {
+			client.sendFile(fileDialog.fileUrl)
+		}
+		onRejected: {
+
 		}
 	}
 }
