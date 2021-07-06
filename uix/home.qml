@@ -143,17 +143,17 @@ Page {
 					chat_stack.pages.push(page)
 			}
 
-			Connections{
+			Connections {
 				target: root
 
-				function onCurrent_chat_uidChanged(){
+				function onCurrent_chat_uidChanged() {
 					// if chat_stack.pages > 1, ...
 					// lets look for the index of the page in chat_stack.children...
 					// that has the user.unique_id == current_chat_uid
-					if (chat_stack.pages.length > 1){
-						for (let i=0; i<chat_stack.children.length; i++){
+					if (chat_stack.pages.length > 1) {
+						for (var i = 0; i < chat_stack.children.length; i++) {
 							const page = chat_stack.children[i]
-							if (page.user.unique_id == current_chat_uid){
+							if (page.user.unique_id === current_chat_uid) {
 								chat_stack.currentIndex = i
 								break
 							}
@@ -167,13 +167,15 @@ Page {
 
 				function onContactListReceived(message) {
 					message.body.forEach(function (data) {
-						if (current_chat_uid === "") current_chat_uid = data.unique_id
+						if (current_chat_uid === "")
+							current_chat_uid = data.unique_id
 						chat_stack.addClient(data)
 					})
 				}
 
 				function onNewPeerJoined(message) {
-					if (current_chat_uid === "") current_chat_uid = message.body.unique_id
+					if (current_chat_uid === "")
+						current_chat_uid = message.body.unique_id
 					chat_stack.addClient(message.body)
 				}
 
@@ -203,16 +205,33 @@ Page {
 				}
 
 				function onPrivateMessageReceived(message) {
+
 					// find the page this message belongs to,
 					// and then put it in the chat model bbelonging to the page
-
-					for (var i=0; i<chat_stack.pages.length; i++) {
+					for (var i = 0; i < chat_stack.pages.length; i++) {
 						const page = chat_stack.pages[i]
-						if (page.user.unique_id === message.body.sender_uid){
-							page.chatmodel.append({message: message})
+						if (page.user.unique_id === message.body.sender_uid) {
+							page.chatmodel.append({
+													  "message": message
+												  })
 						}
 					}
 				}
+
+				function onBinaryReceived(binary_json){
+					// find the page this message belongs to,
+					// and then put it in the chat model bbelonging to the page
+					for (var i = 0; i < chat_stack.pages.length; i++) {
+						const page = chat_stack.pages[i]
+						if (page.user.unique_id === binary_json.body.sender_uid) {
+							page.chatmodel.append({
+													  "message": binary_json
+												  })
+						}
+					}
+				}
+
+
 			}
 		}
 	}

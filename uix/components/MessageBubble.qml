@@ -4,13 +4,15 @@ import QtQuick.Controls 2.15
 
 Rectangle {
 	id: root
-	height: msg_.contentHeight+50
+	height: _.childrenRect.height + 10
 
 	property var pm: ({})
 
 	ColumnLayout {
+		id: _
 		anchors.fill: parent
 		anchors.margins: 5
+		spacing: 3
 
 		RowLayout {
 			width: 100
@@ -39,6 +41,29 @@ Rectangle {
 			font.letterSpacing: 1
 			lineHeight: 1.2
 			font.pixelSize: 12
+		}
+
+		Rectangle {
+			visible: pm.fileurl !== null && pm.fileurl !== undefined
+			height: visible ? 60 : 0
+			clip: true
+			enabled: visible
+			color: "#bdbdbd"
+			Layout.fillWidth: true
+
+			RowLayout {
+				anchors.margins: 4
+				anchors.fill: parent
+
+				Label {
+					text: "filename"
+					Layout.fillWidth: true
+				}
+
+				Button {
+					text: "view file"
+				}
+			}
 		}
 	}
 }

@@ -1,4 +1,5 @@
 # rubbie kelvin
+# NEED HELP FROM WINDOWS USERS
 
 function Main($package) {
 	Write-Host "🎭 setting up virtual environment..."
@@ -16,10 +17,11 @@ function Main($package) {
 		if (python -m venv venv){
 
 			# DEBUG: this line might not work on windows
-			echo "*" > venv/.gitignore
+			Write-Output "*" > venv/.gitignore
 
 			Write-Host "⚡ activating virtual environment"
 			
+			#TODO: fix activate path
 			pwsh -File ./venv/bin/Activate.ps1 > $null
 			if (-Not $?){
 				pwsh.exe -File ./venv/bin/Activate.ps1

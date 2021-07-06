@@ -70,7 +70,7 @@ class CourierServer(QWebSocketServer):
 
 	# noinspection PyTypeChecker
 	@Slot(result=bool)
-	def run(self):
+	def run(self) -> bool:
 		# get host ip
 		host_name = socket.gethostname()
 		host_ip = socket.gethostbyname(host_name)

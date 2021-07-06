@@ -91,6 +91,10 @@ class CourierClient(QWebSocket):
 	# noinspection PyTypeChecker
 	@Slot(str, result=bool)
 	def connect_to(self, hostname: str) -> bool:
+		"""
+		connects to the given host... no protocol or port.
+		* use :self to connect to a server create on this machine.
+		"""
 		# hostname might be a computer network name or ipv4 address
 		if is_valid_ip(hostname):
 			target_ip = hostname
