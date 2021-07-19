@@ -1,0 +1,4 @@
+1. use Message Queuing algorithm to order what message goes first.
+2. by Breaking down large binary files 1024-kbs, and restructuring them on client side,
+    i would be able to reduce lagging on both ends.
+3. resign application ui.
