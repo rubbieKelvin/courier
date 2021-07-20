@@ -2,16 +2,18 @@ import sys
 import socket
 import logging
 
-PORT=8977
+PORT = 8977
 LOG_TO_FILE = False
 RUNNING_BUNDLE = getattr(sys, 'frozen', False)
 
+# noinspection SpellCheckingInspection
 logging.basicConfig(
 	level=logging.INFO,
 	format='%(asctime)s %(name)-8s %(levelname)-8s %(message)s',
 	datefmt='%m-%d %H:%M',
 	filename='courier.log',
 	filemode="w")
+
 
 def is_valid_ip(ip: str) -> bool:
 	try:
@@ -20,11 +22,15 @@ def is_valid_ip(ip: str) -> bool:
 	except socket.error:
 		return False
 
+
+# noinspection PyPep8Naming
 class logger:
 	@staticmethod
 	def _log(*args, mode=logging.info):
-		if not RUNNING_BUNDLE: print(*args)
-		if LOG_TO_FILE: mode(" ".join([str(i) for i in args]))
+		if not RUNNING_BUNDLE:
+			print(*args)
+		if LOG_TO_FILE:
+			mode(" ".join([str(i) for i in args]))
 
 	@staticmethod
 	def log(*args):

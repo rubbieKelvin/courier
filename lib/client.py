@@ -27,7 +27,7 @@ from .messages import PrivateTextMessage
 from .messages import INTENT_PROFILE_UPDATE
 from .messages import INTENT_PRIVATE_MESSAGE
 from .messages import INTENT_CONTACT_LIST_REQUEST
-
+from .queue import MessageQueue
 from .server import CourierServer
 
 
@@ -39,7 +39,7 @@ class FileTransferWorker(QThread):
 		self.message = message
 		self.extension = os.path.splitext(file_url.toLocalFile())[-1]
 		self.receiver_uid = receiver_uid
-		self.finished.connect(lambda: print(f"finished thread handling {self.file_url}"))
+		self.finished.connect(lambda: logger.log(f"finished thread handling {self.file_url}"))
 
 	payloadHandled = Signal(Binary)
 
@@ -67,8 +67,11 @@ class FileTransferWorker(QThread):
 class CourierClient(QWebSocket):
 	def __init__(self):
 		super(CourierClient, self).__init__()
-		self.error.connect(self.on_error)
 		self.data_ = dict()
+		self.queue = MessageQueue("client")
+
+		self.error.connect(self.on_error)
+		self.queue.currentItemUpdated.connect(self.handleQueue)
 		self.textMessageReceived.connect(self.on_text_received)
 		self.binaryMessageReceived.connect(self.on_binary_received)
 
@@ -82,6 +85,30 @@ class CourierClient(QWebSocket):
 	contactListReceived = Signal("QVariant")
 	privateMessageReceived = Signal("QVariant")
 	clientProfileUpdateReceived = Signal("QVariant")
+
+	def handleQueue(self):
+		"""
+		this function is triggered when ever the 0th item in self.queue is changed.
+		"""
+		current = self.queue.current
+
+		if not (current is None):
+			if type(current) is str:
+				super(CourierClient, self).sendTextMessage(current)
+			elif type(current) is QByteArray:
+				super(CourierClient, self).sendBinaryMessage(current)
+			else:
+				raise TypeError
+			self.queue.reverse_pop()
+
+	def sendTextMessage(self, message: str) -> int:
+		self.queue.add(message)
+		# the signals in the message queue will handle message transport
+		return 0
+
+	def sendBinaryMessage(self, data: QByteArray) -> int:
+		self.queue.add(data)
+		return 0
 
 	# noinspection PyTypeChecker
 	@Property("QVariant", notify=dataChanged)
@@ -186,7 +213,7 @@ class CourierClient(QWebSocket):
 
 		# this will save the binary as file and feed the file path instead
 		binary_dict: dict = binary.toDict()
-		print(binary)
+
 		# noinspection PyUnresolvedReferences
 		self.binaryReceived.emit(binary_dict)
 
