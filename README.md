@@ -49,3 +49,7 @@ to create executables for courrier, pass a `--package` argument.
 ```ps
 ./build.ps1 --package
 ```
+
+## Issues
+- message queuing is not perfect because the previous message isn't really triggered after the first one is sent
+- ui still freezes transferring large files.

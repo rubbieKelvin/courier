@@ -4,6 +4,7 @@ from . import PORT
 from . import logger
 from uuid import uuid4
 from typing import Set
+from typing import Union
 
 from PySide2.QtCore import Slot
 from PySide2.QtCore import Signal
@@ -15,6 +16,7 @@ from PySide2.QtWebSockets import QWebSocketServer
 
 from .messages import Text
 from .messages import Binary
+from .queue import MessageQueue
 from .messages import INTENT_NEW_PEER
 from .messages import INTENT_HANDSHAKE
 from .messages import INTENT_BROADCAST
@@ -54,11 +56,37 @@ class CourierServer(QWebSocketServer):
 		self.clients: Set[CourierClientDummy] = set()
 		self.password = ""
 		self._running = False
+		self.queue = MessageQueue("server")
 
 		self.newConnection.connect(self.on_new_connection)
 		self.closed.connect(self.on_connection_closed)
+		self.queue.currentItemUpdated.connect(self.handleQueue)
 
 	runningChanged = Signal(bool)
+
+	def handleQueue(self):
+		"""
+		this function is triggered when ever the 0th item in self.queue is changed.
+		"""
+		client: QWebSocket
+		message: Union[str, QWebSocket]
+		current = self.queue.current
+
+		if not (current is None):
+			client, message = current
+			if type(message) is str:
+				client.sendTextMessage(message)
+			elif type(message) is QByteArray:
+				client.sendBinaryMessage(message)
+			else:
+				raise TypeError
+			self.queue.reverse_pop()
+
+	def sendBinaryMessage(self, client: QWebSocket, data: QByteArray):
+		self.queue.add((client, data))
+
+	def sendTextMessage(self, client: QWebSocket, message: str):
+		self.queue.add((client, message))
 
 	@Property(bool, notify=runningChanged)
 	def running(self) -> bool:
@@ -90,12 +118,12 @@ class CourierServer(QWebSocketServer):
 		# tell client whose has been here
 		if len(self.clients):
 			message = Text([c.to_dict() for c in self.clients], intent=INTENT_CONTACT_LIST_REQUEST)
-			client.client.sendTextMessage(str(message))
+			self.sendTextMessage(client.client, str(message))
 
 		# tell others client joined
 		message = Text(client.to_dict(), intent=INTENT_NEW_PEER)
 		for dummy in self.clients:
-			dummy.client.sendTextMessage(str(message))
+			self.sendTextMessage(dummy.client, str(message))
 		
 		self.clients.add(client)
 
@@ -104,12 +132,12 @@ class CourierServer(QWebSocketServer):
 
 		# if there's a password, tell client to send auth
 		if len(self.password) > 0:
-			client.sendTextMessage(str(Text(CourierServer.HANDSHAKE_AUTH, intent=INTENT_HANDSHAKE)))
+			self.sendTextMessage(client, str(Text(CourierServer.HANDSHAKE_AUTH, intent=INTENT_HANDSHAKE)))
 		# client will be added to set after providing password
 		else:
 			# tell client no need to provide password
 			client_dummy = CourierClientDummy(client)
-			client.sendTextMessage(str(Text(
+			self.sendTextMessage(client, str(Text(
 				CourierServer.HANDSHAKE_NO_AUTH,
 				intent=INTENT_HANDSHAKE,
 				client=client_dummy.to_dict()
@@ -155,14 +183,14 @@ class CourierServer(QWebSocketServer):
 		for dummy in self.clients:
 			if dummy.unique_id == receiver_uid:
 				receiver = dummy.client
-				receiver.sendBinaryMessage(binary.toQByteArray())
+				self.sendBinaryMessage(receiver, binary.toQByteArray())
 				return
 
 	def handle_handshake_intent(self, client: QWebSocket, message: Text):
 		password = message.body
 		if password == self.password:
 			client_dummy = CourierClientDummy(client)
-			client.sendTextMessage(str(
+			self.sendTextMessage(client, str(
 				Text(
 					CourierServer.HANDSHAKE_SUCCESSFUL,
 					intent=INTENT_HANDSHAKE,
@@ -170,14 +198,19 @@ class CourierServer(QWebSocketServer):
 				)
 			))
 			self.add_client(client_dummy)
-		client.sendTextMessage(str(Text(CourierServer.HANDSHAKE_UNSUCCESSFUL, intent=INTENT_HANDSHAKE)))
+
+		# adding this else statement might result in a bug...
+		# its been a while since i wrote this code, there must be a reason i removed it before
+		# i'm putting it now though.
+		else:
+			self.sendTextMessage(client, str(Text(CourierServer.HANDSHAKE_UNSUCCESSFUL, intent=INTENT_HANDSHAKE)))
 
 	def handle_broadcast_intent(self, client: QWebSocket, message: Text):
 		client_dummy = self.get_client_dummy_from_qwebsocket_object(client)
 		message.meta["from"] = client_dummy.username
 		for dummy in self.clients:
 			if dummy != client_dummy:
-				dummy.client.sendTextMessage(str(message))
+				self.sendTextMessage(dummy.client, str(message))
 
 	def handle_profile_update_intent(self, client: QWebSocket, message: Text):
 		client_dummy = self.get_client_dummy_from_qwebsocket_object(client)
@@ -189,7 +222,7 @@ class CourierServer(QWebSocketServer):
 		# now tell everyone asides $client that he updated his profile
 		for dummy in self.clients:
 			if dummy != client_dummy:
-				dummy.client.sendTextMessage(str(message))
+				self.sendTextMessage(dummy.client, str(message))
 
 	# noinspection SpellCheckingInspection
 	def get_client_dummy_from_qwebsocket_object(self, client: QWebSocket) -> CourierClientDummy:
@@ -204,5 +237,5 @@ class CourierServer(QWebSocketServer):
 		for dummy in self.clients:
 			if dummy.unique_id == message.body.get("receiver_uid"):
 				receiver = dummy.client
-				receiver.sendTextMessage(str(message))
+				self.sendTextMessage(receiver, str(message))
 				return
