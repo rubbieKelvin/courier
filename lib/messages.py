@@ -100,11 +100,6 @@ class Binary(PrivateTextMessage):
 	root = QStandardPaths.writableLocation(QStandardPaths.AppDataLocation)
 	root = os.path.join(root, "Courier")
 
-	if not QDir(root).exists():
-		os.mkdir(root)
-	if not QDir(os.path.join(root, "sent")).exists():
-		os.mkdir(os.path.join(root, "sent"))
-
 	def __init__(self, id_: uuid.UUID, message: str, receiver_uid: str, binary: QByteArray, extension: str):
 		super(Binary, self).__init__(id_, message, receiver_uid)
 		self.binary = binary
