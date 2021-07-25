@@ -17,6 +17,9 @@ from lib.helper import Helper
 from lib.server import CourierServer
 from lib.client import CourierClient
 
+# chatlib
+from chatlib import getUniqueId
+
 def prepareApplicationFolders(root: str, tree: dict):
 	for key, value in tree.items():
 		directory = os.path.join(root, key)
@@ -39,13 +42,14 @@ core_application_dir_tree = dict(
 		),
 		user=None,
 		database=None,
-
 	)
 )
 
 # create application directory
 root = QtCore.QStandardPaths.writableLocation(QtCore.QStandardPaths.AppDataLocation)
 prepareApplicationFolders(root, core_application_dir_tree)
+# ensure we have a uid
+getUniqueId()
 
 if __name__ == "__main__":
 	# core init
