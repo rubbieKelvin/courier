@@ -10,25 +10,26 @@ import qrc
 from PySide2 import QtQml
 from PySide2 import QtCore
 from PySide2 import QtGui
-from PySide2 import QtQuickControls2
 
 # lib
 from lib.helper import Helper
 from lib.server import CourierServer
 from lib.client import CourierClient
 
-# chatlib
+# chat lib
 from chatlib import getUniqueId
 
-def prepareApplicationFolders(root: str, tree: dict):
+
+def prepareApplicationFolders(root_: str, tree: dict):
 	for key, value in tree.items():
-		directory = os.path.join(root, key)
+		directory = os.path.join(root_, key)
 
 		if not os.path.exists(directory):
 			os.mkdir(directory)
 
 		if type(value) is dict:
 			prepareApplicationFolders(directory, value)
+
 
 # resolve Warning: Ignoring XDG_SESSION_TYPE=wayland on Gnome. Use QT_QPA_PLATFORM=wayland to run on Wayland anyway.
 if sys.platform == 'linux':
@@ -60,8 +61,6 @@ if __name__ == "__main__":
 	app.setApplicationName("Courier")
 	app.setOrganizationName("stuffsbyrubbie")
 	app.setOrganizationDomain("com.stuffsbyrubbie.courier")
-
-	QtQuickControls2.QQuickStyle.setStyle("Default")
 
 	# Q OBJECT
 	helper = Helper()
