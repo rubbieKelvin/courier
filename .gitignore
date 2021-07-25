@@ -81,6 +81,7 @@ venv
 
 # App files
 *.log
+settings.ini
 
 # Build Files
 dist
@@ -90,3 +91,4 @@ build
 # Where i put trash for testing and stuff
 .lab
 tests/data/img-copy.png
+*.trash
