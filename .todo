@@ -4,3 +4,12 @@
 3. [] resign application ui.
 4. [] abort plan 2. do plan 3, then run Client and Server objects on a another thread,
     not GUI thread. use another QObject to channel data between threads
+5. [] i'll be using a neater approach to manage user's and thier messages.
+    on initial run, the software assigns a unique id to the device,
+    messages will now be stored in sql.
+    the state manager will now be written in python instead of qml.
+    qml will only operate ui specific tasks.
+    with the unique id and sql approach, messages can now be saved.
+    file size will be limited for transfer.
+6. [] i may shread files.
+7. [] vn can be sent.

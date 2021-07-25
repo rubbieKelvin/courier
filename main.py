@@ -10,6 +10,7 @@ import qrc
 from PySide2 import QtQml
 from PySide2 import QtCore
 from PySide2 import QtGui
+from PySide2 import QtQuickControls2
 
 # lib
 from lib.helper import Helper
@@ -30,6 +31,8 @@ if __name__ == "__main__":
     app.setApplicationName("Courier")
     app.setOrganizationName("stuffsbyrubbie")
     app.setOrganizationDomain("com.stuffsbyrubbie.courier")
+
+    QtQuickControls2.QQuickStyle.setStyle("Default")
 
     # Q OBJECT
     helper = Helper()
