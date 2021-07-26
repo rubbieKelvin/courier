@@ -177,6 +177,14 @@ Popup {
 						font.pixelSize: 9
 						enabled: !create_server_btn.busy
 
+						onTextChanged: {
+							_.setData("server_password_field", text)
+						}
+
+						Component.onCompleted: {
+							text = _.getData("server_password_field") || ""
+						}
+
 					}
 
 					CustomTip{

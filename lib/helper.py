@@ -1,21 +1,48 @@
+import os
 import json
 import socket
 from PySide2.QtCore import Slot
 from PySide2.QtCore import QObject
+from PySide2.QtQml import QJSValue
 from PySide2.QtWebSockets import QWebSocketProtocol
 # ...
 from .server import CourierServer
 from .client import CourierClient
 
 class Helper(QObject):
-	def __init__(self, server: CourierServer, client: CourierClient):
+	def __init__(self,
+	#...
+	server: CourierServer,
+	client: CourierClient,
+	dataroot: str=None):
+
 		super(Helper, self).__init__()
 		self.server = server
 		self.client = client
+		self._data = dict()
+		self.dataroot = dataroot
+
+		# load data from dataroot
+		if self.dataroot:
+			# ensure dataroot exists
+			if not os.path.exists(self.dataroot):
+				Helper.__write(self.dataroot, '{}')
+
+			with open(self.dataroot) as file:
+				data = file.read()
+				try:
+					self._data = json.loads(data)
+				except json.JSONDecodeError:
+					pass
 
 		# whenever server starts running,
 		# connect client to server.
 		self.server.runningChanged.connect(self.connect_client_to_self)
+
+	@staticmethod
+	def __write(filename: str, data: str):
+		with open(filename, "w") as file:
+			file.write(data)
 
 	# noinspection PyTypeChecker
 	@Slot(result=str)
@@ -47,11 +74,28 @@ class Helper(QObject):
 		return self.client.connect_to(hostname, password)
 
 
-	def setItemData(self):
-		pass
+	@Slot("QVariant")
+	def setItemData(self, kv: QJSValue):
+		"""sets key:value pairs to local data"""
+		kv = kv.toVariant()
+		self._data.update(kv)
+		if self.dataroot:
+			data = json.dumps(self._data)
+			Helper.__write(self.dataroot, data)
 
-	def getItemData(self):
-		pass
+	@Slot(str, result="QVariant")
+	def getItemData(self, key: str):
+		return self._data.get(key)
 
-	def deleteItemData(self):
-		pass
+	@Slot(str)
+	def deleteItemData(self, key: str):
+		try:
+			del self._data[key]
+		except KeyError:
+			pass
+
+	@Slot()
+	def resetItemData(self):
+		self._data = dict()
+		if self.dataroot:
+			Helper.__write(self.dataroot, '{}')

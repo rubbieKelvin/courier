@@ -49,6 +49,7 @@ core_application_dir_tree = dict(
 # create application directory
 root = QtCore.QStandardPaths.writableLocation(QtCore.QStandardPaths.AppDataLocation)
 prepareApplicationFolders(root, core_application_dir_tree)
+
 # ensure we have a uid
 getUniqueId()
 
@@ -65,7 +66,10 @@ if __name__ == "__main__":
 	# Q OBJECT
 	server = CourierServer()
 	client = CourierClient()
-	helper = Helper(server=server, client=client)
+	helper = Helper(
+		server=server,
+		client=client,
+		dataroot=os.path.join(root, "Courier", "user", ".appdat"))
 
 	# load engine & libs
 	engine.rootContext().setContextProperty("helper", helper)
