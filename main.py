@@ -17,7 +17,7 @@ from lib.server import CourierServer
 from lib.client import CourierClient
 
 # chat lib
-from chatlib import getUniqueId
+from lib import getUniqueId
 
 
 def prepareApplicationFolders(root_: str, tree: dict):

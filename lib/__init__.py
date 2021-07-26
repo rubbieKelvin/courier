@@ -1,6 +1,10 @@
+import os
 import sys
 import socket
 import logging
+from uuid import uuid4
+from datetime import datetime
+from PySide2.QtCore import QStandardPaths
 
 PORT = 8977
 LOG_TO_FILE = False
@@ -47,3 +51,26 @@ class logger:
 	@staticmethod
 	def warn(*args):
 		logger._log(*args, mode=logging.warning)
+
+
+def getUniqueId() -> str:
+	""" creates a unique id for this device.
+	the id will be used for unique identification in chats.
+	if there's no unique id, a new one will be created
+	"""
+	filedir = os.path.join(
+		QStandardPaths.writableLocation(QStandardPaths.AppDataLocation),
+		"Courier", "user", ".user"
+	)
+
+	if os.path.exists(filedir):
+		# just get the file and return data
+		with open(filedir) as file:
+			uid = file.read()
+		return uid
+		
+	# create new and return data
+	uid = uuid4().__str__()+"-"+datetime.now().__str__()
+	with open(filedir, "w") as file:
+		file.write(uid)
+	return uid
