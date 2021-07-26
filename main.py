@@ -63,9 +63,9 @@ if __name__ == "__main__":
 	app.setOrganizationDomain("com.stuffsbyrubbie.courier")
 
 	# Q OBJECT
-	helper = Helper()
 	server = CourierServer()
 	client = CourierClient()
+	helper = Helper(server=server, client=client)
 
 	# load engine & libs
 	engine.rootContext().setContextProperty("helper", helper)

@@ -111,6 +111,7 @@
         <file>uix/components/app/ChatPage.qml</file>
         <file>uix/components/utils/RippleArea.qml</file>
         <file>uix/components/utils/helper.js</file>
+        <file>uix/components/utils/constants.js</file>
         <file>uix/components/utils/emoji.js</file>
         <file>uix/components/popup/StickerBox.qml</file>
         <file>uix/components/utils/Emoji.qml</file>
@@ -121,5 +122,6 @@
         <file>uix/filepage.qml</file>
         <file>uix/assets/images/logo.png</file>
         <file>uix/assets/images/logo.svg</file>
+        <file>uix/components/utils/HelperFunctions.qml</file>
     </qresource>
 </RCC>

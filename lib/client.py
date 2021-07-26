@@ -17,6 +17,7 @@ from PySide2.QtCore import QIODevice
 from PySide2.QtCore import QByteArray
 from PySide2.QtWebSockets import QWebSocket
 from PySide2.QtNetwork import QAbstractSocket
+from PySide2.QtWebSockets import QWebSocketProtocol
 
 from .messages import Text
 from .messages import Binary
@@ -74,10 +75,16 @@ class CourierClient(QWebSocket):
 		self.queue.currentItemUpdated.connect(self.handleQueue)
 		self.textMessageReceived.connect(self.on_text_received)
 		self.binaryMessageReceived.connect(self.on_binary_received)
+		self.connected.connect(self.on_connected)
+		self.disconnected.connect(self.on_disconnected)
+		self._running = False
+		self._handshake_successful = False
+		self.password = ""
 
 	binarySent = Signal("QVariant")
 	dataChanged = Signal("QVariant")
 	newPeerJoined = Signal("QVariant")
+	runningChanged = Signal(bool)
 	binaryReceived = Signal("QVariant")
 	broadcastReceived = Signal("QVariant")
 	handshakeReceived = Signal("QVariant")
@@ -85,6 +92,7 @@ class CourierClient(QWebSocket):
 	contactListReceived = Signal("QVariant")
 	privateMessageReceived = Signal("QVariant")
 	clientProfileUpdateReceived = Signal("QVariant")
+	handshakeDone = Signal(bool)
 
 	def handleQueue(self):
 		"""
@@ -116,12 +124,13 @@ class CourierClient(QWebSocket):
 		return self.data_
 
 	# noinspection PyTypeChecker
-	@Slot(str, result=bool)
-	def connect_to(self, hostname: str) -> bool:
+	@Slot(str, str, result=bool)
+	def connect_to(self, hostname: str, password: str) -> bool:
 		"""
 		connects to the given host... no protocol or port.
 		* use :self to connect to a server create on this machine.
 		"""
+		self.password = password
 		# hostname might be a computer network name or ipv4 address
 		if is_valid_ip(hostname):
 			target_ip = hostname
@@ -224,8 +233,23 @@ class CourierClient(QWebSocket):
 
 		if go_on:
 			self.data_ = message.meta.get("client")
+			self._running = True
+			self.runningChanged.emit(self._running)
+
 		# noinspection PyUnresolvedReferences
 		self.handshakeReceived.emit(message.toDict())
+		
+		if go_on:
+			# noinspection PyUnresolvedReferences
+			self._handshake_successful = True
+			self.handshakeDone.emit(True)
+		elif message.body == CourierServer.HANDSHAKE_UNSUCCESSFUL:
+			self._handshake_successful = False
+			self.handshakeDone.emit(False)
+			self.close(QWebSocketProtocol.CloseCodePolicyViolated, "handshake unsuccessful")
+
+		if message.body == CourierServer.HANDSHAKE_AUTH:
+			self.authenticate(self.password)
 
 	def handle_broadcast_intent(self, message: Text):
 		# noinspection PyUnresolvedReferences
@@ -251,3 +275,22 @@ class CourierClient(QWebSocket):
 			)
 		# noinspection PyUnresolvedReferences
 		self.privateMessageReceived.emit(message.toDict())
+
+	def on_connected(self):
+		# running should be set to true when auth handshake is successfull
+		# self._running = True
+		# self.runningChanged.emit(self._running)
+		pass
+
+	def on_disconnected(self):
+		self._running = False
+		self._handshake_successful = False
+		self.runningChanged.emit(self._running)
+
+	@Property(bool, notify=runningChanged)
+	def running(self) -> bool:
+		return self._running
+
+	@Property(bool, notify=handshakeDone)
+	def handshake_successful(self) -> bool:
+		return self._handshake_successful

@@ -3,8 +3,11 @@ import QtQuick.Controls 2.5
 import QtQuick.Layouts 1.9
 import "../controls"
 import "../widgets"
+import "../utils"
+import "../popup"
 import "../utils/svg.js" as Svg
 import QtGraphicalEffects 1.15
+import "../utils/constants.js" as Constants
 
 Popup {
 	id: root
@@ -52,6 +55,8 @@ Popup {
 		open()
 	}
 
+	HelperFunctions{id: _}
+
 	ColumnLayout{
 		id: c1_
 		width: 250
@@ -90,7 +95,17 @@ Popup {
 
 					Label{
 						id: contact_description
-						text: "create or join server to chat.."
+						text: {
+							if (courier_state==Constants.COURIER_MODE_IDLE){
+								return "create or join a server"
+							}else if (courier_state==Constants.COURIER_MODE_CLIENT){
+								return "you are connected to server"
+							}else if (courier_state==Constants.COURIER_MODE_SERVER){
+								return "you run the server"
+							}else{
+								return 'server setting up...'
+							}
+						}
 						font.pixelSize: 9
 						color: theme.text_light
 					}
@@ -104,6 +119,8 @@ Popup {
 			spacing: 0
 
 			MenuItemDelegate{
+				enabled: visible
+				visible: courier_state !== Constants.COURIER_MODE_CLIENT && courier_state !== Constants.COURIER_MODE_SERVER
 				lefticon.source: Svg.fromString([
 					'<svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">',
 					'<path d="M9.95752 12.1166C7.08253 12.1166 4.65674 12.5864 4.65674 14.3995C4.65674 16.2134 7.0982 16.6667 9.95752 16.6667C12.8325 16.6667 15.2583 16.1969 15.2583 14.3838C15.2583 12.5699 12.8168 12.1166 9.95752 12.1166Z" fill="#695EE7"/>',
@@ -116,7 +133,13 @@ Popup {
 				text: "Create Server"
 				Layout.preferredHeight: 50
 				Layout.fillWidth: true
-				onClicked: server_password_container.shown = !server_password_container.shown
+				onClicked: {
+					if (!create_server_btn.busy && !join_server_button.busy)
+						server_password_container.shown = !server_password_container.shown
+				}
+				onVisibleChanged: {
+					if (!visible) server_password_container.shown = false
+				}
 			}
 
 			HiddenContainer{
@@ -145,22 +168,57 @@ Popup {
 					}
 
 					TextField{
+						id: server_password_field
 						placeholderText: "Set Password..."
 						Layout.fillWidth: true
 						Layout.fillHeight: true
 						background: Rectangle{color: "transparent"}
 						color: theme.text
 						font.pixelSize: 9
+						enabled: !create_server_btn.busy
+
+					}
+
+					CustomTip{
+						id: sp_tip
+						timeout: 2000
+						visible: false
+						bg_color: "red"
+						fg_color: "white"
 					}
 
 					TranslucentButton{
+						id: create_server_btn
 						text: "create"
+						enabled: !busy
+						onClicked: {
+							const password = server_password_field.text
+
+							if (!password){
+								sp_tip.show("enter password", 2000)
+							}else{
+								if (_.createServer(server_password_field.text)) {
+									busy=Qt.binding(function(){
+										const res = courier_state !== Constants.COURIER_MODE_SERVER && courier_state !== Constants.COURIER_MODE_CLIENT
+										if (!res) {
+											create_server_btn.busy = false
+											return false
+										}
+										return res
+									})
+								} else{
+									sp_tip.show("couldn't create server!", 2000)
+								}
+							}
+						}
 					}
 
 				}
 			}
 
 			MenuItemDelegate{
+				enabled: visible
+				visible: courier_state !== Constants.COURIER_MODE_CLIENT && courier_state !== Constants.COURIER_MODE_SERVER
 				lefticon.source: Svg.fromString([
 					'<svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">',
 					'<path opacity="0.4" d="M17.5844 7.98989H16.5818V7.00968C16.5818 6.59121 16.2462 6.25 15.8326 6.25C15.42 6.25 15.0835 6.59121 15.0835 7.00968V7.98989H14.0826C13.6691 7.98989 13.3335 8.33109 13.3335 8.74957C13.3335 9.16804 13.6691 9.50925 14.0826 9.50925H15.0835V10.4903C15.0835 10.9088 15.42 11.25 15.8326 11.25C16.2462 11.25 16.5818 10.9088 16.5818 10.4903V9.50925H17.5844C17.997 9.50925 18.3335 9.16804 18.3335 8.74957C18.3335 8.33109 17.997 7.98989 17.5844 7.98989Z" fill="#695EE7"/>',
@@ -170,7 +228,13 @@ Popup {
 				text: "Join Server"
 				Layout.preferredHeight: 50
 				Layout.fillWidth: true
-				onClicked: client_form_container.shown = !client_form_container.shown
+				onClicked: {
+					if (!create_server_btn.busy && !join_server_button.busy)
+					client_form_container.shown = !client_form_container.shown
+				}
+				onVisibleChanged: {
+					if (!visible) client_form_container.shown = false
+				}
 			}
 
 			HiddenContainer{
@@ -192,9 +256,18 @@ Popup {
 					enabled: client_form_container.shown
 					spacing: 0
 
+					CustomTip{
+						id: tip_2
+						timeout: 2000
+						visible: false
+						bg_color: "red"
+						fg_color: "white"
+					}
+
 					RowLayout{
 						Layout.fillWidth: true
 						Layout.preferredHeight: 36
+						enabled: !join_server_button.busy
 
 						Image {
 							source: Svg.fromString([
@@ -207,6 +280,7 @@ Popup {
 						}
 
 						TextField{
+							id: hostname_field
 							placeholderText: "Server name / IP address..."
 							Layout.fillWidth: true
 							Layout.fillHeight: true
@@ -219,6 +293,7 @@ Popup {
 					RowLayout{
 						Layout.fillWidth: true
 						Layout.preferredHeight: 36
+						enabled: !join_server_button.busy
 
 						Image {
 							source: Svg.fromString([
@@ -231,6 +306,7 @@ Popup {
 						}
 
 						TextField{
+							id: cf_password_field
 							placeholderText: "password"
 							Layout.fillWidth: true
 							Layout.fillHeight: true
@@ -241,9 +317,85 @@ Popup {
 					}
 
 					TranslucentButton{
+						id: join_server_button
 						text: "connect"
 						Layout.fillWidth: true
 						Layout.preferredHeight: 38
+
+						// the client sometimes gets the Error first
+						// ...before the busy binding is made in onClick. so i'll use this to
+						// ...keep track of the error.
+						property bool client_error: false
+						onClicked: {
+							const hostname = hostname_field.text.trim()
+							const password = cf_password_field.text
+
+							if (hostname.length < 1){
+								tip_2.show("enter hostname", 2000)
+							}else{
+								client_error = false
+
+								if (_.connectToServer(hostname, password)){
+
+									// the _.connectToServer must has triggered an error
+									// at this point, and a connection to the signal would have altered
+									// the value of this variable, so we check.
+
+									if (client_error) {
+										busy = false
+									}else{
+										busy=Qt.binding(function(){
+											const res = courier_state !== Constants.COURIER_MODE_SERVER && courier_state !== Constants.COURIER_MODE_CLIENT
+											if (!res) {
+												join_server_button.busy = false
+												return false
+											}
+											return res
+										})
+									}
+								}else{
+									tip_2.show(`couldn't connect to '${hostname}'`)
+								}
+							}
+						}
+
+						Connections{
+							// when the client tries to connect to a server,...
+							// and the client can't find the server, the error is passed to a signal
+							// which we can now use to stop the button from being busy
+							target: client
+							function onError(error){
+								if (!client.running && !client.handshake_successful){
+									if (error === 7 || error === 0){
+										// 7. PySide2.QtNetwork.QAbstractSocket.SocketError.QAbstractSocket.NetworkError
+										// An error occurred with the network (e.g., the network cable was accidentally plugged out).
+
+										// 0. PySide2.QtNetwork.QAbstractSocket.SocketError.ConnectionRefusedError
+										// The connection was refused by the peer (or timed out).
+
+										join_server_button.client_error = true
+										join_server_button.busy = false
+
+										tip_2.show(
+											(error === 7) ? "NetworkError, server probably doesn't exist" :
+											(error === 0) ? "Connection Refused, seems like server not listening" :
+											"Opps, an error occured.",
+											2000
+										)
+									}
+								}
+							}
+
+							function onHandshakeDone(successful){
+								if (!client.running){
+									if (!successful){
+										join_server_button.client_error = true
+										join_server_button.busy = false
+										tip_2.show("Invalid password", 2000)
+									}
+								}
+							}
+						}
 					}
 
 					// dummy for space
@@ -296,18 +448,22 @@ Popup {
 			}
 
 			MenuItemDelegate{
+				visible: courier_state==Constants.COURIER_MODE_SERVER || courier_state==Constants.COURIER_MODE_CLIENT
+				enabled: visible
 				lefticon.source: Svg.fromString([
 					'<svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">',
 					'<path opacity="0.4" d="M1.66675 5.37249C1.66675 3.32999 3.35861 1.66666 5.43719 1.66666H9.57145C11.6458 1.66666 13.3334 3.32499 13.3334 5.36416V14.6275C13.3334 16.6708 11.6415 18.3333 9.56212 18.3333H5.42956C3.35437 18.3333 1.66675 16.675 1.66675 14.6358V13.8525V5.37249Z" fill="#695EE7"/>',
 					'<path d="M18.1493 9.54566L15.7778 7.1215C15.5327 6.8715 15.1382 6.8715 14.8939 7.12316C14.6505 7.37483 14.6513 7.78066 14.8956 8.03066L16.1949 9.35816H14.9491H7.95721C7.61228 9.35816 7.33228 9.64566 7.33228 9.99983C7.33228 10.3548 7.61228 10.6415 7.95721 10.6415H16.1949L14.8956 11.969C14.6513 12.219 14.6505 12.6248 14.8939 12.8765C15.0165 13.0023 15.1764 13.0657 15.3371 13.0657C15.4961 13.0657 15.656 13.0023 15.7778 12.8782L18.1493 10.4548C18.2669 10.334 18.3335 10.1707 18.3335 9.99983C18.3335 9.82983 18.2669 9.6665 18.1493 9.54566Z" fill="#695EE7"/>',
 					'</svg>'
 				])
-				text: "Logout"
+				text: (courier_state==Constants.COURIER_MODE_SERVER) ? "Shutdown Server" : "Leave Server"
 				Layout.preferredHeight: 50
 				Layout.fillWidth: true
+				onClicked: _.shutdownCourierNetwork()
 			}
 
 			MenuItemDelegate{
+				id: h_
 				lefticon.source: Svg.fromString([
 					'<svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">',
 					'<path d="M9.99742 12.6455C6.40325 12.6455 3.33325 13.2122 3.33325 15.4788C3.33325 17.7463 6.38409 18.333 9.99742 18.333C13.5916 18.333 16.6616 17.7672 16.6616 15.4997C16.6616 13.2322 13.6116 12.6455 9.99742 12.6455" fill="#695EE7"/>',
@@ -315,10 +471,22 @@ Popup {
 					'</svg>'
 				])
 				text: "Hostname"
-				subtitle.text: "255.255.255.255"
+				subtitle.text: "0.0.0.0"
 				Layout.preferredHeight: 50
 				Layout.fillWidth: true
 				showStroke: false
+
+				Timer{
+					id: t_
+					interval: 1000
+					repeat: true
+					onTriggered: h_.subtitle.text = helper.ip()
+				}
+
+				Component.onCompleted: {
+					text = helper.hostname()
+					t_.start()
+				}
 			}
 		}
 	}

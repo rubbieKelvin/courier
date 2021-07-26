@@ -6,7 +6,7 @@ ToolTip {
 	id: root
 	font.pixelSize: 10
 	background: Rectangle{
-		color: theme.background
+		color: root.bg_color
 		border.width: 1
 		radius: 5
 		border.color: theme.secondary
@@ -23,7 +23,10 @@ ToolTip {
 	contentItem: Label{
 		font: root.font
 		text: root.text
-		color: theme.text
+		color: root.fg_color
 		opacity: .9
 	}
+
+	property color bg_color: theme.background
+	property color fg_color: theme.text
 }

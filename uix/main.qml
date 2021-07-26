@@ -6,6 +6,8 @@ import Qt.labs.platform 1.1
 import "./components/app"
 import "./components/utils"
 import "./components/popup"
+import "./components/utils/svg.js" as Svg
+import "./components/utils/constants.js" as Constants
 
 ApplicationWindow {
 	id: application
@@ -22,6 +24,21 @@ ApplicationWindow {
 	}
 
 	property string settingsFileName: "settings.ini"
+
+	// this property tells what state the server/client pair is in
+	readonly property string courier_state: {
+		if (!client || !server) return Constants.COURIER_MODE_IDLE
+
+		if (!server.running && !client.running) {
+			return Constants.COURIER_MODE_IDLE
+		}else if (!server.running && client.running){
+			return Constants.COURIER_MODE_CLIENT
+		}else if (server.running && client.running){
+			return Constants.COURIER_MODE_SERVER
+		}else{
+			return Constants.COURIER_MODE_SETTING_SERVER
+		}
+	}
 
 	Settings {
 		category: "Window"
@@ -53,6 +70,8 @@ ApplicationWindow {
 		id: poppins_regular
 		source: "assets/fonts/Poppins/Poppins-Regular.ttf"
 	}
+
+	HelperFunctions{id:_}
 
 	AppHeader{
 		id: header
@@ -101,6 +120,7 @@ ApplicationWindow {
 		menu: Menu {
 
 			MenuItem {
+				enabled: courier_state !== Constants.COURIER_MODE_CLIENT && courier_state !== Constants.COURIER_MODE_SERVER
 				text: qsTr("Create Server")
 				onTriggered: {
 					header.avatar.menu.openCreateServerPopup()
@@ -109,6 +129,7 @@ ApplicationWindow {
 			}
 
 			MenuItem {
+				enabled: courier_state !== Constants.COURIER_MODE_CLIENT && courier_state !== Constants.COURIER_MODE_SERVER
 				text: qsTr("Join Server")
 				onTriggered: {
 					header.avatar.menu.openJoinServerPopup()
@@ -121,6 +142,12 @@ ApplicationWindow {
 				onTriggered: {
 					notif_settings.do_not_disturb = !notif_settings.do_not_disturb
 				}
+			}
+
+			MenuItem {
+				enabled: courier_state==Constants.COURIER_MODE_SERVER || courier_state==Constants.COURIER_MODE_CLIENT
+				text: qsTr((courier_state==Constants.COURIER_MODE_SERVER) ? "Shutdown Server" : "Leave Server")
+				onTriggered: _.shutdownCourierNetwork()
 			}
 
 			MenuItem {

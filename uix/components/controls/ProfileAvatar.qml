@@ -1,6 +1,7 @@
 import QtQuick 2.15
 import QtQuick.Controls 2.15
 import "../popup"
+import "../utils/constants.js" as Constant
 
 Rectangle{
 	id: root
@@ -27,6 +28,21 @@ Rectangle{
 		id: menu
 		x: -width-10
 		y: 15
+	}
+
+	Rectangle{
+		x: 25
+		y: 25
+		radius: width/2
+		anchors.left: parent.left
+		anchors.bottom: parent.bottom
+		anchors.bottomMargin: -3
+		anchors.leftMargin: -5
+		width: 8
+		height: width
+		border.color: theme.stroke
+		border.width: 1
+		color: (courier_state === Constant.COURIER_MODE_CLIENT || courier_state === Constant.COURIER_MODE_SERVER) ? theme.online : theme.offline
 	}
 
 }

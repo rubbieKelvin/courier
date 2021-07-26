@@ -27,6 +27,7 @@ Rectangle {
 		Label{
 			text: "carlie anderson"
 			Layout.fillWidth: true
+			color: theme.text
 		}
 
 		ToolButtonIcon{

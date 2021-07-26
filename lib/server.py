@@ -239,3 +239,7 @@ class CourierServer(QWebSocketServer):
 				receiver = dummy.client
 				self.sendTextMessage(receiver, str(message))
 				return
+
+	@Slot()
+	def shutdown(self):
+		self.close()
