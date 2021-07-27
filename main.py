@@ -12,12 +12,11 @@ from PySide2 import QtCore
 from PySide2 import QtGui
 
 # lib
+from lib import db
+from lib import getUniqueId
 from lib.helper import Helper
 from lib.server import CourierServer
 from lib.client import CourierClient
-
-# chat lib
-from lib import getUniqueId
 
 
 def prepareApplicationFolders(root_: str, tree: dict):
@@ -54,6 +53,10 @@ prepareApplicationFolders(root, core_application_dir_tree)
 getUniqueId()
 
 if __name__ == "__main__":
+	# db init
+	if not db.init():
+		sys.exit("error initializing database.")
+
 	# core init
 	app = QtGui.QGuiApplication(sys.argv)
 	engine = QtQml.QQmlApplicationEngine()
