@@ -13,6 +13,7 @@ from PySide2.QtCore import QByteArray
 from PySide2.QtNetwork import QHostAddress
 from PySide2.QtWebSockets import QWebSocket
 from PySide2.QtWebSockets import QWebSocketServer
+from PySide2.QtWebSockets import QWebSocketProtocol
 
 from .queue import MessageQueue
 
@@ -273,6 +274,7 @@ class CourierServer(QWebSocketServer):
 
 	@Slot()
 	def shutdown(self):
+		for dummy in self.clients:
+			dummy.client.close(QWebSocketProtocol.CloseCodeGoingAway, "server shutdown")
+		self.clients.clear()
 		self.close()
-
-# TODO: fix server shutdown bug

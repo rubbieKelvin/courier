@@ -311,6 +311,7 @@ class CourierClient(QWebSocket):
 	def on_disconnected(self):
 		""" client has been disconnected
 		"""
+		print("client disconnected")
 		self._running = False
 		self._handshake_successful = False
 		self.runningChanged.emit(self._running)
