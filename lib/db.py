@@ -58,12 +58,10 @@ class Message(Db):
 	)
 	"""
 
-def init():
+def init(root):
 
 	# initialize sqlite3+
-	dbfile = os.path.join(
-		QStandardPaths.writableLocation(QStandardPaths.AppDataLocation),
-		"Courier", "database", "courier-messages.sqlite3.crypt")
+	dbfile = os.path.join(root, "courier-messages.sqlite3.crypt")
 	db = QSqlDatabase.addDatabase("QSQLITE")
 	db.setDatabaseName(dbfile)
 

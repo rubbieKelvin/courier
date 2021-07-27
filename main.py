@@ -12,12 +12,10 @@ from PySide2 import QtCore
 from PySide2 import QtGui
 
 # lib
+from lib import db
 from lib.helper import Helper
 from lib.server import CourierServer
 from lib.client import CourierClient
-
-# chat lib
-from lib import getUniqueId
 
 
 def prepareApplicationFolders(root_: str, tree: dict):
@@ -35,24 +33,6 @@ def prepareApplicationFolders(root_: str, tree: dict):
 if sys.platform == 'linux':
 	os.environ["XDG_SESSION_TYPE"] = "gnome"
 
-core_application_dir_tree = dict(
-	Courier=dict(
-		files=dict(
-			sent=None,
-			recieved=None
-		),
-		user=None,
-		database=None,
-	)
-)
-
-# create application directory
-root = QtCore.QStandardPaths.writableLocation(QtCore.QStandardPaths.AppDataLocation)
-prepareApplicationFolders(root, core_application_dir_tree)
-
-# ensure we have a uid
-getUniqueId()
-
 if __name__ == "__main__":
 	# core init
 	app = QtGui.QGuiApplication(sys.argv)
@@ -63,13 +43,42 @@ if __name__ == "__main__":
 	app.setOrganizationName("stuffsbyrubbie")
 	app.setOrganizationDomain("com.stuffsbyrubbie.courier")
 
+	root = QtCore.QStandardPaths.writableLocation(QtCore.QStandardPaths.AppDataLocation)
+
+	# create root is not available
+	if not os.path.exists(root):
+		# create top level if not exist
+		toplevel_dir = os.path.split(root)[0]
+		if not os.path.exists(toplevel_dir):
+			if not QtCore.QDir().mkdir(toplevel_dir):
+				sys.exit("could'nt create application toplevel root")
+		if not QtCore.QDir().mkdir(root):
+			sys.exit("could'nt create application data root")
+
+	# create application directory
+	prepareApplicationFolders(root,	
+		dict(
+			files=dict(
+				sent=None,
+				recieved=None
+			),
+			user=None,
+			database=None,
+		))
+
+	# initialze
+	if not db.init(os.path.join(
+		root, "database"
+	)):
+		sys.exit("couldn't initialize database.")
+	
 	# Q OBJECT
 	server = CourierServer()
 	client = CourierClient()
 	helper = Helper(
 		server=server,
 		client=client,
-		dataroot=os.path.join(root, "Courier", "user", ".appdat"))
+		dataroot=os.path.join(root, "user", ".appdat"))
 
 	# load engine & libs
 	engine.rootContext().setContextProperty("helper", helper)

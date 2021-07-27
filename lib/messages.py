@@ -5,11 +5,12 @@ all messages sent over the network will be organised as per str(Text|Binary)
 import os
 import json
 import uuid
+import warnings
 from typing import Any
 from datetime import datetime
 from PySide2.QtCore import QUrl
-from PySide2.QtCore import QDir
 from PySide2.QtCore import QFile
+from PySide2.QtQml import QJSValue
 from PySide2.QtCore import QIODevice
 from PySide2.QtCore import QByteArray
 from PySide2.QtCore import QStandardPaths
@@ -26,6 +27,12 @@ INTENT_PRIVATE_MESSAGE = 5          # used to send private messages between two 
 
 class Text:
 	def __init__(self, body: Any, intent: int = INTENT_BROADCAST, **meta):
+		
+		warnings.warn(
+			"This class is depreciated. use Json instead and JsonByteArray for QByteArrays",
+			# category=DeprecationWarning
+		)
+
 		self.body = body
 		self.intent = intent
 		self.meta = meta
@@ -191,3 +198,68 @@ class Binary(PrivateTextMessage):
 			result['fileurl'] = QUrl.fromLocalFile(filename).toString()
 
 		return result
+
+###################################################################################
+
+
+class Json:
+	def __init__(self, **kwargs) -> None:
+		self.data = kwargs
+
+		for key, value in self.data.items():
+			self.__setattr__(f"_{key}", value)
+
+	def __str__(self) -> str:
+		return json.dumps(self.data)
+
+	def __repr__(self) -> str:
+		return f"<Json {', '.join(self.data.keys())}>"
+
+	def to_dict(self):
+		return self.data
+
+	def get(self, key: str, default=None):
+		return self.data.get(key, default)
+
+	@staticmethod
+	def from_str(string: str):
+		return Json(**json.loads(string))
+
+	@staticmethod
+	def from_qvariant(variant: QJSValue):
+		data = variant.toVariant()
+		if type(data) is dict:
+			return Json(**data)
+		return Json(data=data)
+
+
+#####################################################################################
+
+
+class ClientHandShakeMessage(Json):
+	def __init__(self, uid: str, username: str, password: str):
+		""" this class if used to structure data that is sent when client
+		is sending authentication and self details to server.
+		"""
+		super().__init__(uid=uid, username=username, password=password, intent=INTENT_HANDSHAKE)
+
+class AuthStatusMessage(Json):
+	def __init__(self, successful: bool):
+		""" this message is sent to client.
+		used to tell client if authentication was successfull
+		"""
+		super().__init__(successful=successful, intent=INTENT_HANDSHAKE)
+
+class ConnectedClientsMessage(Json):
+	def __init__(self, clients: list):
+		""" this is sent to client with data
+		containing list of connected clients and thier details
+		"""
+		super().__init__(clients=clients, intent=INTENT_CONTACT_LIST_REQUEST)
+
+class ClientDataMessage(Json):
+	def __init__(self, client: dict) -> None:
+		"""
+		used to send client data to other clients
+		"""
+		super().__init__(client=client, intent=INTENT_NEW_PEER)

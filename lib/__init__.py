@@ -60,7 +60,7 @@ def getUniqueId() -> str:
 	"""
 	filedir = os.path.join(
 		QStandardPaths.writableLocation(QStandardPaths.AppDataLocation),
-		"Courier", "user", ".user"
+		"user", ".u"
 	)
 
 	if os.path.exists(filedir):
@@ -74,3 +74,28 @@ def getUniqueId() -> str:
 	with open(filedir, "w") as file:
 		file.write(uid)
 	return uid
+
+
+def username(name: str=None) -> str:
+	""" returns the hostname if client has not set a username
+	if client has a username, just return it then.
+	if the name argument is passed, just set if as a new username 
+	"""
+
+	filedir = os.path.join(
+		QStandardPaths.writableLocation(QStandardPaths.AppDataLocation),
+		"user", ".n"
+	)
+
+	if not name:
+		if os.path.exists(filedir):
+			# just get the file and return data
+			with open(filedir) as file:
+				username = file.read()
+			return username
+		
+	# create new and return data
+	username = name or socket.gethostname()
+	with open(filedir, "w") as file:
+		file.write(username)
+	return username

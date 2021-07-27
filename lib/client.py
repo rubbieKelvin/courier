@@ -4,7 +4,9 @@ from uuid import uuid4
 
 from . import PORT
 from . import logger
+from . import username
 from . import is_valid_ip
+from . import getUniqueId
 
 from PySide2.QtCore import QUrl
 from PySide2.QtCore import Slot
@@ -21,15 +23,15 @@ from PySide2.QtWebSockets import QWebSocketProtocol
 
 from .messages import Text
 from .messages import Binary
-from .messages import INTENT_NEW_PEER
-from .messages import INTENT_BROADCAST
-from .messages import INTENT_HANDSHAKE
 from .messages import PrivateTextMessage
+
+from .messages import INTENT_HANDSHAKE
 from .messages import INTENT_PROFILE_UPDATE
-from .messages import INTENT_PRIVATE_MESSAGE
-from .messages import INTENT_CONTACT_LIST_REQUEST
+
 from .queue import MessageQueue
-from .server import CourierServer
+
+from .messages import Json
+from .messages import ClientHandShakeMessage
 
 
 class FileTransferWorker(QThread):
@@ -67,6 +69,17 @@ class FileTransferWorker(QThread):
 
 class CourierClient(QWebSocket):
 	def __init__(self):
+		"""
+		HOW IT WORKS:
+		1. after connecting to a network...
+		2. send details containing:
+			- uid: str
+			- username: str
+			- password: str
+		4. wait for success message
+		5. if successfull, we're in.
+		"""
+
 		super(CourierClient, self).__init__()
 		self.data_ = dict()
 		self.queue = MessageQueue("client")
@@ -200,20 +213,25 @@ class CourierClient(QWebSocket):
 		logger.error(f"error: {str(error)}")
 
 	def on_text_received(self, text: str):
-		message = Text.fromStr(text)
+		""" this method will be called once a text is recieved from the server.
+		"""
+		message: Json = Json.from_str(text)
 
-		if message.intent == INTENT_HANDSHAKE:
+		if message.get('intent') == INTENT_HANDSHAKE:
 			self.handle_handshake_intent(message)
-		elif message.intent == INTENT_BROADCAST:
-			self.handle_broadcast_intent(message)
-		elif message.intent == INTENT_NEW_PEER:
-			self.handle_new_peer_intent(message)
-		elif message.intent == INTENT_CONTACT_LIST_REQUEST:
-			self.handle_contact_list_request(message)
-		elif message.intent == INTENT_PROFILE_UPDATE:
-			self.handle_client_profile_update(message)
-		elif message.intent == INTENT_PRIVATE_MESSAGE:
-			self.handle_pm_intent(PrivateTextMessage.fromStr(text))
+
+		else:
+			logger.warn("got message with unregistered intent:", message)
+		# elif message.intent == INTENT_BROADCAST:
+		# 	self.handle_broadcast_intent(message)
+		# elif message.intent == INTENT_NEW_PEER:
+		# 	self.handle_new_peer_intent(message)
+		# elif message.intent == INTENT_CONTACT_LIST_REQUEST:
+		# 	self.handle_contact_list_request(message)
+		# elif message.intent == INTENT_PROFILE_UPDATE:
+		# 	self.handle_client_profile_update(message)
+		# elif message.intent == INTENT_PRIVATE_MESSAGE:
+		# 	self.handle_pm_intent(PrivateTextMessage.fromStr(text))
 
 	# noinspection PyMethodMayBeStatic
 	def on_binary_received(self, data: QByteArray):
@@ -226,36 +244,36 @@ class CourierClient(QWebSocket):
 		# noinspection PyUnresolvedReferences
 		self.binaryReceived.emit(binary_dict)
 
-	def handle_handshake_intent(self, message: Text):
-		go_on = (
-			message.body == CourierServer.HANDSHAKE_SUCCESSFUL or
-			message.body == CourierServer.HANDSHAKE_NO_AUTH)
-
-		if go_on:
-			self.data_ = message.meta.get("client")
-			self._running = True
-			self.runningChanged.emit(self._running)
-
-		# noinspection PyUnresolvedReferences
-		self.handshakeReceived.emit(message.toDict())
+	def handle_handshake_intent(self, message: Json):
+		# we'll get a successful=true message if authentication is successful.
 		
-		if go_on:
-			# noinspection PyUnresolvedReferences
+		self.handshakeReceived.emit(message.to_dict())
+		if message.get('successful'):
+			self._running = True
 			self._handshake_successful = True
-			self.handshakeDone.emit(True)
-		elif message.body == CourierServer.HANDSHAKE_UNSUCCESSFUL:
+			self.runningChanged.emit(self._running)
+		else:
 			self._handshake_successful = False
-			self.handshakeDone.emit(False)
-			self.close(QWebSocketProtocol.CloseCodePolicyViolated, "handshake unsuccessful")
-
-		if message.body == CourierServer.HANDSHAKE_AUTH:
-			self.authenticate(self.password)
+			self.close(QWebSocketProtocol.CloseCodePolicyViolated, "handshake unsuccessfull")
+		self.handshakeDone.emit(self._handshake_successful)
 
 	def handle_broadcast_intent(self, message: Text):
 		# noinspection PyUnresolvedReferences
 		self.broadcastReceived.emit(message.toDict())
 
 	def handle_new_peer_intent(self, message: Text):
+		""" this function is called when a new client connected to
+		...the same server this one is connected to.
+
+		.ex: {
+			"body": {
+				"username": ~str,
+				"unique_id": ~uuid
+			},
+			"intent": 2,
+			"datetime": ~datetime
+		}
+		"""
 		# noinspection PyUnresolvedReferences
 		self.newPeerJoined.emit(message.toDict())
 
@@ -277,12 +295,22 @@ class CourierClient(QWebSocket):
 		self.privateMessageReceived.emit(message.toDict())
 
 	def on_connected(self):
-		# running should be set to true when auth handshake is successfull
-		# self._running = True
-		# self.runningChanged.emit(self._running)
-		pass
+		""" send auth details. after auth details are sent,
+		a text will be recieved from the server with a intent=INTENT_HANDSHAKE (which we'l have to listen for)
+		the text will be structured as laid out in messages.AuthStatusMessage,
+		which will contain data, that tells if authentication was successful.
+		"""
+		message = ClientHandShakeMessage(
+			uid=getUniqueId(),
+			username=username(),
+			password=self.password
+		)
+
+		self.sendTextMessage(str(message))
 
 	def on_disconnected(self):
+		""" client has been disconnected
+		"""
 		self._running = False
 		self._handshake_successful = False
 		self.runningChanged.emit(self._running)

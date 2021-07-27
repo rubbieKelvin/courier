@@ -14,44 +14,58 @@ from PySide2.QtNetwork import QHostAddress
 from PySide2.QtWebSockets import QWebSocket
 from PySide2.QtWebSockets import QWebSocketServer
 
+from .queue import MessageQueue
+
 from .messages import Text
 from .messages import Binary
-from .queue import MessageQueue
-from .messages import INTENT_NEW_PEER
-from .messages import INTENT_HANDSHAKE
-from .messages import INTENT_BROADCAST
 from .messages import PrivateTextMessage
-from .messages import INTENT_PROFILE_UPDATE
-from .messages import INTENT_PRIVATE_MESSAGE
-from .messages import INTENT_CONTACT_LIST_REQUEST
+
+from .messages import INTENT_HANDSHAKE
+
+from .messages import Json
+from .messages import AuthStatusMessage
+from .messages import ClientDataMessage
+from .messages import ConnectedClientsMessage
 
 
 class CourierClientDummy:
 	"""used to hold all data about the virtual client...
 	including client object"""
 
-	def __init__(self, client: QWebSocket) -> None:
+	def __init__(self, client: QWebSocket, username: str, uid: str) -> None:
 		self.client = client
-		self.unique_id = str(uuid4())
-		self.username: str = "Anonymous"
+		self.uid = uid
+		self.username = username
 
 	def to_dict(self) -> dict:
 		return dict(
 			username=self.username,
-			unique_id=self.unique_id
+			uid=self.uid
 		)
 
 	def __repr__(self) -> str:
-		return f"<ClientD id={self.unique_id} username={self.username}>"
+		return f"<ClientD id={self.uid} username={self.username}>"
 
 
 class CourierServer(QWebSocketServer):
-	HANDSHAKE_AUTH = "$auth"  # tell the client there's password on this server
-	HANDSHAKE_NO_AUTH = "$no-auth"  # tell client there's no password on this server
-	HANDSHAKE_SUCCESSFUL = "$successful"  # tell client the handshake was successful
-	HANDSHAKE_UNSUCCESSFUL = "$unsuccessful"  # tell client the handshake was unsuccessful
 
 	def __init__(self):
+		"""
+		HOW IT WORKS:
+		1. the server starts listening for clients,
+		2. the server then recieves a message body from client containing:
+			- uid: str
+			- username: str
+			- password: str
+		4. the server checks the password...
+			and then sends a status message to client...
+			while creating a dummy profile here.
+		5. the client is added to the network and ready to go.
+
+		* in this commit, password on server is compulsary
+		* removed HANDSHAKE_NO_AUTH. cause there'll always be auth
+		"""
+
 		super(CourierServer, self).__init__("courier", QWebSocketServer.NonSecureMode)
 		self.clients: Set[CourierClientDummy] = set()
 		self.password = ""
@@ -67,6 +81,8 @@ class CourierServer(QWebSocketServer):
 	def handleQueue(self):
 		"""
 		this function is triggered when ever the 0th item in self.queue is changed.
+		once the 0th item is changed it will be sent over the network as text or as byte.
+		after which the item will be deleted as the newxt one comes in for proccessing.
 		"""
 		client: QWebSocket
 		message: Union[str, QWebSocket]
@@ -83,22 +99,34 @@ class CourierServer(QWebSocketServer):
 			self.queue.reverse_pop()
 
 	def sendBinaryMessage(self, client: QWebSocket, data: QByteArray):
+		"""overides QWebSocket's implementation to enable
+		ordered data be recieved on the other end as they are sent here.
+		"""
 		self.queue.add((client, data))
 
 	def sendTextMessage(self, client: QWebSocket, message: str):
+		"""overides QWebSocket's implementation to enable
+		ordered data be recieved on the other end as they are sent here.
+		"""
 		self.queue.add((client, message))
 
 	@Property(bool, notify=runningChanged)
 	def running(self) -> bool:
+		"""holds server runnning state, for use in qml/js files."""
 		return self._running and self.isListening()
 
 	@Slot(str)
 	def set_password(self, password: str):
+		""""set server password.
+		this method best has its effect before run menthos is called"""
 		self.password = password
 
 	# noinspection PyTypeChecker
 	@Slot(result=bool)
 	def run(self) -> bool:
+		""" this method will make the server start listening for connections
+		"""
+
 		# get host ip
 		host_name = socket.gethostname()
 		host_ip = socket.gethostbyname(host_name)
@@ -115,34 +143,30 @@ class CourierServer(QWebSocketServer):
 		return False
 
 	def add_client(self, client: CourierClientDummy):
+		"""
+		 this method will send data of existing clients to new client,
+		 send new client's data to old clients,
+		 and then add client to clients set.
+		"""
+
 		# tell client whose has been here
 		if len(self.clients):
-			message = Text([c.to_dict() for c in self.clients], intent=INTENT_CONTACT_LIST_REQUEST)
+			message = ConnectedClientsMessage(clients=[c.to_dict() for c in self.clients])
 			self.sendTextMessage(client.client, str(message))
 
 		# tell others client joined
-		message = Text(client.to_dict(), intent=INTENT_NEW_PEER)
+		message = ClientDataMessage(client=client.to_dict())
 		for dummy in self.clients:
 			self.sendTextMessage(dummy.client, str(message))
 		
 		self.clients.add(client)
 
 	def on_new_connection(self):
-		client: QWebSocket = self.nextPendingConnection()
+		"""
+		This method is called once a new client has connected to server
+		"""
 
-		# if there's a password, tell client to send auth
-		if len(self.password) > 0:
-			self.sendTextMessage(client, str(Text(CourierServer.HANDSHAKE_AUTH, intent=INTENT_HANDSHAKE)))
-		# client will be added to set after providing password
-		else:
-			# tell client no need to provide password
-			client_dummy = CourierClientDummy(client)
-			self.sendTextMessage(client, str(Text(
-				CourierServer.HANDSHAKE_NO_AUTH,
-				intent=INTENT_HANDSHAKE,
-				client=client_dummy.to_dict()
-			)))
-			self.add_client(client_dummy)
+		client: QWebSocket = self.nextPendingConnection()
 
 		client.disconnected.connect(self.on_client_disconnected)
 		client.textMessageReceived.connect(self.on_text_received)
@@ -159,17 +183,27 @@ class CourierServer(QWebSocketServer):
 		client: QWebSocket = self.sender()
 
 	def on_text_received(self, text: str):
-		client: QWebSocket = self.sender()
-		message = Text.fromStr(text)
+		"""
+		This method is called once a text is sent to the server
+		"""
 
-		if message.intent == INTENT_HANDSHAKE:
+		client: QWebSocket = self.sender()
+		message: Json = Json.from_str(text)
+
+		if message.get('intent') == INTENT_HANDSHAKE:
 			self.handle_handshake_intent(client, message)
-		elif message.intent == INTENT_BROADCAST:
-			self.handle_broadcast_intent(client, message)
-		elif message.intent == INTENT_PROFILE_UPDATE:
-			self.handle_profile_update_intent(client, message)
-		elif message.intent == INTENT_PRIVATE_MESSAGE:
-			self.handle_private_message(client, PrivateTextMessage.fromStr(text))
+
+		else:
+			logger.warn("message with unregistered intent:", message)
+
+		# elif message.get('intent') == INTENT_BROADCAST:
+		# 	self.handle_broadcast_intent(client, message)
+
+		# elif message.get('intent') == INTENT_PROFILE_UPDATE:
+		# 	self.handle_profile_update_intent(client, message)
+		
+		# elif message.get('intent') == INTENT_PRIVATE_MESSAGE:
+		# 	self.handle_private_message(client, PrivateTextMessage.fromStr(text))
 
 	def on_binary_received(self, data: QByteArray):
 		client: QWebSocket = self.sender()
@@ -186,24 +220,21 @@ class CourierServer(QWebSocketServer):
 				self.sendBinaryMessage(receiver, binary.toQByteArray())
 				return
 
-	def handle_handshake_intent(self, client: QWebSocket, message: Text):
-		password = message.body
-		if password == self.password:
-			client_dummy = CourierClientDummy(client)
-			self.sendTextMessage(client, str(
-				Text(
-					CourierServer.HANDSHAKE_SUCCESSFUL,
-					intent=INTENT_HANDSHAKE,
-					client=client_dummy.to_dict()
-				)
-			))
-			self.add_client(client_dummy)
+	def handle_handshake_intent(self, client: QWebSocket, message: Json):
+		"""
+		handle messages with intent=1.
+		"""
+		uid = message.get('uid')
+		password = message.get('password')
+		username = message.get("username")
+		message = AuthStatusMessage(successful=(password==self.password))
 
-		# adding this else statement might result in a bug...
-		# its been a while since i wrote this code, there must be a reason i removed it before
-		# i'm putting it now though.
-		else:
-			self.sendTextMessage(client, str(Text(CourierServer.HANDSHAKE_UNSUCCESSFUL, intent=INTENT_HANDSHAKE)))
+		if password==self.password:
+			dummy = CourierClientDummy(uid=uid, username=username, client=client)
+			self.add_client(dummy)
+
+		self.sendTextMessage(client, str(message))
+			
 
 	def handle_broadcast_intent(self, client: QWebSocket, message: Text):
 		client_dummy = self.get_client_dummy_from_qwebsocket_object(client)
@@ -243,3 +274,5 @@ class CourierServer(QWebSocketServer):
 	@Slot()
 	def shutdown(self):
 		self.close()
+
+# TODO: fix server shutdown bug
