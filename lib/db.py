@@ -1,4 +1,5 @@
 import os
+from . import logger
 from PySide2.QtSql import QSqlQuery
 from PySide2.QtSql import QSqlDatabase
 from PySide2.QtCore import QStandardPaths
@@ -26,6 +27,7 @@ class Db:
 		if self.db:
 			if not self.__tablename__ in self.db.tables():
 				return self.query.exec_(self.CREATE_TABLE_SQL)
+			return True
 		return False
 
 
@@ -67,13 +69,13 @@ def init():
 
 	# open database
 	if not db.open():
+		logger.error(db.lastError())
 		return False
 	
 	# assign
 	Db.db = db
 
 	# create table
-	Person().createTable()
-	Message().createTable()
-
-	return True
+	return \
+		Person().createTable() and \
+		Message().createTable()
