@@ -31,8 +31,16 @@ def is_valid_ip(ip: str) -> bool:
 class logger:
 	@staticmethod
 	def _log(*args, mode=logging.info):
+		MODE = "INFO"
+		if mode == logging.debug:
+			MODE = "DEBUG"
+		elif mode == logging.error:
+			MODE = "ERROR"
+		elif mode == logging.warn:
+			MODE = "WARN"
+
 		if not RUNNING_BUNDLE:
-			print(*args)
+			print(f"{MODE}: ", *args)
 		if LOG_TO_FILE:
 			mode(" ".join([str(i) for i in args]))
 
@@ -92,7 +100,7 @@ def username(name: str=None) -> str:
 			# just get the file and return data
 			with open(filedir) as file:
 				username = file.read()
-			return username
+			return username.splitlines(keepends=False)[0]
 		
 	# create new and return data
 	username = name or socket.gethostname()

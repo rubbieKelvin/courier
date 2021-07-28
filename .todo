@@ -1,7 +1,7 @@
 1. [done] use Message Queuing algorithm to order what message goes first.
 2. [aborted] by Breaking down large binary files 1024-kbs, and restructuring them on client side,
     i would be able to reduce lagging on both ends.
-3. [] resign application ui.
+3. [done] resign application ui.
 4. [] abort plan 2. do plan 3, then run Client and Server objects on a another thread,
     not GUI thread. use another QObject to channel data between threads
 5. [] i'll be using a neater approach to manage user's and thier messages.
@@ -13,3 +13,4 @@
     file size will be limited for transfer.
 6. [] i may shread files.
 7. [] vn can be sent.
+8. [done] remove broadcast feature

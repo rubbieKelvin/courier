@@ -2,7 +2,8 @@ import os
 from . import logger
 from PySide2.QtSql import QSqlQuery
 from PySide2.QtSql import QSqlDatabase
-from PySide2.QtCore import QStandardPaths
+
+FILENAME = "courier.sqlite3.crypt"
 
 class Db:
 	db: QSqlDatabase=None
@@ -34,19 +35,62 @@ class Db:
 class Person(Db):
 	__tablename__ = "people"
 	CREATE_TABLE_SQL = f"""
-	CREATE TABLE "{__tablename__}" (
-		"id"	INTEGER,
-		"uid"	TEXT NOT NULL UNIQUE,
-		"name"	TEXT NOT NULL,
-		"avatar_filename"	TEXT,
-		PRIMARY KEY("id" AUTOINCREMENT)
+	CREATE TABLE IF NOT EXISTS "{__tablename__}" (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		uid TEXT NOT NULL UNIQUE,
+		username TEXT NOT NULL,
+		avatar TEXT,
+		last_interaction DATETIME
 	)
 	"""
+
+	def update(self, uid: str, **kwargs) -> bool:
+		SQL = f"""
+		UPDATE
+			{self.__tablename__}
+		SET
+			{
+				", ".join([
+					f"{key} = :{key}" for key, value in kwargs.items()
+				])
+			}
+		WHERE
+			uid = "{uid}"
+		"""
+		self.query.prepare(SQL)
+		for key, value in kwargs.items():
+			self.query.bindValue(f":{key}", value)
+
+		return self.query.exec_()
+
+	def getAll(self) -> list:
+		SQL = """
+		SELECT
+			id,
+			uid,
+			username,
+			avatar,
+			last_interaction
+		FROM people
+		"""
+		result = []
+		if self.query.exec_(SQL):
+			while self.query.next():
+				result.append(dict(
+					_id=self.query.value("id"),
+					uid=self.query.value("uid"),
+					username=self.query.value("username"),
+					avatar=self.query.value("avatar"),
+					last_interaction=self.query.value("last_interaction")
+				))
+			return result
+		return None
+
 
 class Message(Db):
 	__tablename__ = "messages"
 	CREATE_TABLE_SQL = f"""
-	CREATE TABLE {__tablename__} (
+	CREATE TABLE IF NOT EXISTS {__tablename__} (
 		id            INTEGER  PRIMARY KEY AUTOINCREMENT,
 		body          TEXT,
 		time_uploaded DATETIME NOT NULL,
@@ -61,7 +105,7 @@ class Message(Db):
 def init(root):
 
 	# initialize sqlite3+
-	dbfile = os.path.join(root, "courier-messages.sqlite3.crypt")
+	dbfile = os.path.join(root, FILENAME)
 	db = QSqlDatabase.addDatabase("QSQLITE")
 	db.setDatabaseName(dbfile)
 
@@ -74,6 +118,12 @@ def init(root):
 	Db.db = db
 
 	# create table
-	return \
+	res = \
 		Person().createTable() and \
 		Message().createTable()
+
+	if not res:
+		logger.error(db.lastError())
+	return res
+
+# TODO: fix query binding on Person.update

@@ -82,6 +82,7 @@ venv
 # App files
 *.log
 settings.ini
+*.*.crypt
 
 # Build Files
 dist

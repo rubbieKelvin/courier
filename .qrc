@@ -123,5 +123,7 @@
         <file>uix/assets/images/logo.png</file>
         <file>uix/assets/images/logo.svg</file>
         <file>uix/components/utils/HelperFunctions.qml</file>
+        <file>uix/components/models/ContactModel.qml</file>
+        <file>uix/components/models/MessageModel.qml</file>
     </qresource>
 </RCC>

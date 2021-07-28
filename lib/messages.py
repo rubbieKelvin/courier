@@ -11,13 +11,12 @@ from datetime import datetime
 from PySide2.QtCore import QUrl
 from PySide2.QtCore import QFile
 from PySide2.QtQml import QJSValue
-from PySide2.QtCore import QIODevice
-from PySide2.QtCore import QByteArray
-from PySide2.QtCore import QStandardPaths
-from PySide2.QtCore import QCryptographicHash
+# from PySide2.QtCore import QIODevice
+# from PySide2.QtCore import QByteArray
+# from PySide2.QtCore import QStandardPaths
+# from PySide2.QtCore import QCryptographicHash
 
 
-INTENT_BROADCAST = 0    # used when messages are meant to be shared
 INTENT_HANDSHAKE = 1    # used when client - server are handshaking
 INTENT_NEW_PEER = 2    # used to tell client a user has joined
 INTENT_PROFILE_UPDATE = 3   # used by client to update profile on server & and by server to broadcast profile update
@@ -25,179 +24,179 @@ INTENT_CONTACT_LIST_REQUEST = 4     # used pass contact list to client
 INTENT_PRIVATE_MESSAGE = 5          # used to send private messages between two clients
 
 
-class Text:
-	def __init__(self, body: Any, intent: int = INTENT_BROADCAST, **meta):
+# class Text:
+# 	def __init__(self, body: Any, intent: int = INTENT_BROADCAST, **meta):
 		
-		warnings.warn(
-			"This class is depreciated. use Json instead and JsonByteArray for QByteArrays",
-			# category=DeprecationWarning
-		)
+# 		warnings.warn(
+# 			"This class is depreciated. use Json instead and JsonByteArray for QByteArrays",
+# 			# category=DeprecationWarning
+# 		)
 
-		self.body = body
-		self.intent = intent
-		self.meta = meta
+# 		self.body = body
+# 		self.intent = intent
+# 		self.meta = meta
 
-	def toDict(self) -> dict:
-		data = dict(
-			body=self.body,
-			intent=self.intent,
-			datetime=str(datetime.now())
-		)
+# 	def toDict(self) -> dict:
+# 		data = dict(
+# 			body=self.body,
+# 			intent=self.intent,
+# 			datetime=str(datetime.now())
+# 		)
 
-		data.update(self.meta)
-		return data
+# 		data.update(self.meta)
+# 		return data
 
-	def __str__(self) -> str:
-		return json.dumps(self.toDict())
+# 	def __str__(self) -> str:
+# 		return json.dumps(self.toDict())
 
-	def __repr__(self) -> str:
-		return f"<Message body={self.body} intent={self.intent}>"
+# 	def __repr__(self) -> str:
+# 		return f"<Message body={self.body} intent={self.intent}>"
 
-	@staticmethod
-	def fromStr(message: str):
-		message: dict = json.loads(message)
-		t_obj = Text(message.get("body"), message.get("intent"))
+# 	@staticmethod
+# 	def fromStr(message: str):
+# 		message: dict = json.loads(message)
+# 		t_obj = Text(message.get("body"), message.get("intent"))
 		
-		del message["body"]
-		del message["intent"]
-		t_obj.meta = message
-		return t_obj
+# 		del message["body"]
+# 		del message["intent"]
+# 		t_obj.meta = message
+# 		return t_obj
 
 
-class PrivateTextMessage(Text):
-	def __init__(self, id_: uuid.UUID, message: str, receiver_uid: str):
-		super(PrivateTextMessage, self).__init__(
-			dict(
-				message_id=str(id_) or str(uuid.uuid4()),
-				text=message,
-				receiver_uid=receiver_uid),
-			intent=INTENT_PRIVATE_MESSAGE
-		)
-		self.body: dict
+# class PrivateTextMessage(Text):
+# 	def __init__(self, id_: uuid.UUID, message: str, receiver_uid: str):
+# 		super(PrivateTextMessage, self).__init__(
+# 			dict(
+# 				message_id=str(id_) or str(uuid.uuid4()),
+# 				text=message,
+# 				receiver_uid=receiver_uid),
+# 			intent=INTENT_PRIVATE_MESSAGE
+# 		)
+# 		self.body: dict
 
-	def sign(self, sender_uid: str):
-		"""tag the message with the sender's uid"""
-		if not self.body.get("sender_uid"):
-			self.body["sender_uid"] = sender_uid
+# 	def sign(self, sender_uid: str):
+# 		"""tag the message with the sender's uid"""
+# 		if not self.body.get("sender_uid"):
+# 			self.body["sender_uid"] = sender_uid
 
-	@property
-	def signer(self) -> str:
-		# returns the signer. none if not signed
-		return self.body.get("sender_uid")
+# 	@property
+# 	def signer(self) -> str:
+# 		# returns the signer. none if not signed
+# 		return self.body.get("sender_uid")
 
-	@staticmethod
-	def fromStr(message: str):
-		message: dict = json.loads(message)
-		t_obj = PrivateTextMessage(
-			message.get("body").get("message_id"),
-			message.get("body").get("text"),
-			message.get("body").get("receiver_uid"))
+# 	@staticmethod
+# 	def fromStr(message: str):
+# 		message: dict = json.loads(message)
+# 		t_obj = PrivateTextMessage(
+# 			message.get("body").get("message_id"),
+# 			message.get("body").get("text"),
+# 			message.get("body").get("receiver_uid"))
 
-		t_obj.body["sender_uid"] = message.get("body").get("sender_uid")
+# 		t_obj.body["sender_uid"] = message.get("body").get("sender_uid")
 		
-		del message["body"]
-		del message["intent"]
+# 		del message["body"]
+# 		del message["intent"]
 
-		t_obj.meta = message
-		return t_obj
+# 		t_obj.meta = message
+# 		return t_obj
 
 
-class Binary(PrivateTextMessage):
-	"""docstring for Binary"""
-	root = QStandardPaths.writableLocation(QStandardPaths.AppDataLocation)
-	root = os.path.join(root, "Courier")
+# class Binary(PrivateTextMessage):
+# 	"""docstring for Binary"""
+# 	root = QStandardPaths.writableLocation(QStandardPaths.AppDataLocation)
+# 	root = os.path.join(root, "Courier")
 
-	def __init__(self, id_: uuid.UUID, message: str, receiver_uid: str, binary: QByteArray, extension: str):
-		super(Binary, self).__init__(id_, message, receiver_uid)
-		self.binary = binary
-		self.body["extension"] = extension
+# 	def __init__(self, id_: uuid.UUID, message: str, receiver_uid: str, binary: QByteArray, extension: str):
+# 		super(Binary, self).__init__(id_, message, receiver_uid)
+# 		self.binary = binary
+# 		self.body["extension"] = extension
 
-	@staticmethod
-	def qByteArrayToBase64Str(byte_array: QByteArray) -> str:
-		return bytearray(byte_array.toBase64()).decode("utf8")
+# 	@staticmethod
+# 	def qByteArrayToBase64Str(byte_array: QByteArray) -> str:
+# 		return bytearray(byte_array.toBase64()).decode("utf8")
 
-	@staticmethod
-	def base64StrToQByteArray(b64: str) -> QByteArray:
-		b64: bytes = bytes(b64, "utf8")
-		result = QByteArray(b64)
-		return QByteArray.fromBase64(result)
+# 	@staticmethod
+# 	def base64StrToQByteArray(b64: str) -> QByteArray:
+# 		b64: bytes = bytes(b64, "utf8")
+# 		result = QByteArray(b64)
+# 		return QByteArray.fromBase64(result)
 
-	def toQByteArray(self) -> QByteArray:
-		binary = Binary.qByteArrayToBase64Str(self.binary)
+# 	def toQByteArray(self) -> QByteArray:
+# 		binary = Binary.qByteArrayToBase64Str(self.binary)
 
-		self.body["binary"] = binary
-		self.body["hash"] = QCryptographicHash.hash(self.binary, QCryptographicHash.Sha256)
-		self.body["hash"] = Binary.qByteArrayToBase64Str(self.body["hash"])
+# 		self.body["binary"] = binary
+# 		self.body["hash"] = QCryptographicHash.hash(self.binary, QCryptographicHash.Sha256)
+# 		self.body["hash"] = Binary.qByteArrayToBase64Str(self.body["hash"])
 
-		data = dict(
-			body=self.body,
-			intent=self.intent,
-			datetime=str(datetime.now())
-		)
+# 		data = dict(
+# 			body=self.body,
+# 			intent=self.intent,
+# 			datetime=str(datetime.now())
+# 		)
 
-		data.update(self.meta)
+# 		data.update(self.meta)
 
-		byte_array = json.dumps(data)
-		return QByteArray(bytes(byte_array, "utf8"))
+# 		byte_array = json.dumps(data)
+# 		return QByteArray(bytes(byte_array, "utf8"))
 
-	@staticmethod
-	def fromQByteArray(byte_array: QByteArray):
-		data: str = bytearray(byte_array).decode("utf8")
-		data: dict = json.loads(data)
-		body: dict = data.get("body")
+# 	@staticmethod
+# 	def fromQByteArray(byte_array: QByteArray):
+# 		data: str = bytearray(byte_array).decode("utf8")
+# 		data: dict = json.loads(data)
+# 		body: dict = data.get("body")
 
-		binary = Binary.base64StrToQByteArray(body.get("binary"))
-		hash_ = Binary.base64StrToQByteArray(body.get("hash"))
+# 		binary = Binary.base64StrToQByteArray(body.get("binary"))
+# 		hash_ = Binary.base64StrToQByteArray(body.get("hash"))
 
-		binary_message = Binary(
-			id_=body.get("message_id"),
-			message=body.get("text"),
-			receiver_uid=body.get("receiver_uid"),
-			binary=binary,
-			extension=body.get("extension")
-		)
+# 		binary_message = Binary(
+# 			id_=body.get("message_id"),
+# 			message=body.get("text"),
+# 			receiver_uid=body.get("receiver_uid"),
+# 			binary=binary,
+# 			extension=body.get("extension")
+# 		)
 
-		binary_message.body["hash"] = hash_
-		binary_message.body["sender_uid"] = body.get("sender_uid")
-		binary_message.meta["hash_verified"] = hash_ == QCryptographicHash.hash(binary, QCryptographicHash.Sha256)
+# 		binary_message.body["hash"] = hash_
+# 		binary_message.body["sender_uid"] = body.get("sender_uid")
+# 		binary_message.meta["hash_verified"] = hash_ == QCryptographicHash.hash(binary, QCryptographicHash.Sha256)
 
-		del data["body"]
-		del data["intent"]
+# 		del data["body"]
+# 		del data["intent"]
 
-		binary_message.meta.update(data)
-		return binary_message
+# 		binary_message.meta.update(data)
+# 		return binary_message
 
-	def fromStr(self):
-		"""
-		this method doesnt work here
-		"""
-		raise NotImplementedError
+# 	def fromStr(self):
+# 		"""
+# 		this method doesnt work here
+# 		"""
+# 		raise NotImplementedError
 
-	def toDict(self) -> dict:
-		result = super().toDict()
+# 	def toDict(self) -> dict:
+# 		result = super().toDict()
 
-		try:
-			# just to avoid errors when calling this method from __str__
-			del result["body"]["hash"]
-		except KeyError:
-			pass
+# 		try:
+# 			# just to avoid errors when calling this method from __str__
+# 			del result["body"]["hash"]
+# 		except KeyError:
+# 			pass
 
-		# save binary to file
-		filepath = Binary.root if self.signer else os.path.join(Binary.root, "sent")
-		filename = result["body"]["message_id"]+result["body"]["extension"]
-		filename = os.path.join(filepath, filename)
-		file = QFile(filename)
+# 		# save binary to file
+# 		filepath = Binary.root if self.signer else os.path.join(Binary.root, "sent")
+# 		filename = result["body"]["message_id"]+result["body"]["extension"]
+# 		filename = os.path.join(filepath, filename)
+# 		file = QFile(filename)
 
-		if not file.exists():
-			if file.open(QIODevice.WriteOnly):
-				file.write(self.binary)
-				result['fileurl'] = QUrl.fromLocalFile(filename).toString()
-			else:
-				result["fileurl"] = ""
-		else:
-			result['fileurl'] = QUrl.fromLocalFile(filename).toString()
+# 		if not file.exists():
+# 			if file.open(QIODevice.WriteOnly):
+# 				file.write(self.binary)
+# 				result['fileurl'] = QUrl.fromLocalFile(filename).toString()
+# 			else:
+# 				result["fileurl"] = ""
+# 		else:
+# 			result['fileurl'] = QUrl.fromLocalFile(filename).toString()
 
-		return result
+# 		return result
 
 ###################################################################################
 

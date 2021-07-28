@@ -1,6 +1,8 @@
 import QtQuick 2.9
 import QtQuick.Controls 2.5
 import "../widgets"
+import "../models"
+import "../utils/helper.js" as Helper
 
 BorderedRectangle{
 	id: root
@@ -16,12 +18,15 @@ BorderedRectangle{
 
 		ListView{
 			id: list
-			model: 20
+			model: ContactModel{}
 			anchors.fill: parent
 			boundsBehavior: Flickable.StopAtBounds
 			clip: true
 			delegate: ContactItem{
 				width: (parent || {width: 0}).width
+				name: username.trim()
+				tip: `You can now chat with ${username.trim()}`
+				subtext: Helper.truncate(`You can now chat with ${username.trim()}`, 30)
 			}
 		}
 	}

@@ -80,11 +80,15 @@ if __name__ == "__main__":
 		client=client,
 		dataroot=os.path.join(root, "user", ".appdat"))
 
-	# load engine & libs
+	# load libs & models
 	engine.rootContext().setContextProperty("helper", helper)
 	engine.rootContext().setContextProperty("server", server)
 	engine.rootContext().setContextProperty("client", client)
+
+	# load engine
 	engine.load(QtCore.QUrl("qrc:///uix/main.qml"))
 
 	# run loop
 	sys.exit(app.exec_())
+
+# TODO: create contants.py file to store constants

@@ -17,10 +17,6 @@ from PySide2.QtWebSockets import QWebSocketProtocol
 
 from .queue import MessageQueue
 
-from .messages import Text
-from .messages import Binary
-from .messages import PrivateTextMessage
-
 from .messages import INTENT_HANDSHAKE
 
 from .messages import Json
@@ -197,29 +193,21 @@ class CourierServer(QWebSocketServer):
 		else:
 			logger.warn("message with unregistered intent:", message)
 
-		# elif message.get('intent') == INTENT_BROADCAST:
-		# 	self.handle_broadcast_intent(client, message)
-
-		# elif message.get('intent') == INTENT_PROFILE_UPDATE:
-		# 	self.handle_profile_update_intent(client, message)
-		
-		# elif message.get('intent') == INTENT_PRIVATE_MESSAGE:
-		# 	self.handle_private_message(client, PrivateTextMessage.fromStr(text))
-
 	def on_binary_received(self, data: QByteArray):
-		client: QWebSocket = self.sender()
-		client_dummy = self.get_client_dummy_from_qwebsocket_object(client)
+		# client: QWebSocket = self.sender()
+		# client_dummy = self.get_client_dummy_from_qwebsocket_object(client)
 
-		binary: Binary = Binary.fromQByteArray(data)
-		binary.sign(client_dummy.unique_id)
+		# binary: Binary = Binary.fromQByteArray(data)
+		# binary.sign(client_dummy.unique_id)
 
-		receiver_uid = binary.body.get("receiver_uid")
-		receiver: QWebSocket
-		for dummy in self.clients:
-			if dummy.unique_id == receiver_uid:
-				receiver = dummy.client
-				self.sendBinaryMessage(receiver, binary.toQByteArray())
-				return
+		# receiver_uid = binary.body.get("receiver_uid")
+		# receiver: QWebSocket
+		# for dummy in self.clients:
+		# 	if dummy.unique_id == receiver_uid:
+		# 		receiver = dummy.client
+		# 		self.sendBinaryMessage(receiver, binary.toQByteArray())
+		# 		return
+		pass
 
 	def handle_handshake_intent(self, client: QWebSocket, message: Json):
 		"""
@@ -236,41 +224,35 @@ class CourierServer(QWebSocketServer):
 
 		self.sendTextMessage(client, str(message))
 			
+	def handle_profile_update_intent(self, client: QWebSocket, message: Json):
+		# client_dummy = self.get_client_dummy_from_qwebsocket_object(client)
+		# profile: dict = message.body
 
-	def handle_broadcast_intent(self, client: QWebSocket, message: Text):
-		client_dummy = self.get_client_dummy_from_qwebsocket_object(client)
-		message.meta["from"] = client_dummy.username
-		for dummy in self.clients:
-			if dummy != client_dummy:
-				self.sendTextMessage(dummy.client, str(message))
+		# if profile.get("username"):
+		# 	client_dummy.username = profile.get("username")
 
-	def handle_profile_update_intent(self, client: QWebSocket, message: Text):
-		client_dummy = self.get_client_dummy_from_qwebsocket_object(client)
-		profile: dict = message.body
-
-		if profile.get("username"):
-			client_dummy.username = profile.get("username")
-
-		# now tell everyone asides $client that he updated his profile
-		for dummy in self.clients:
-			if dummy != client_dummy:
-				self.sendTextMessage(dummy.client, str(message))
+		# # now tell everyone asides $client that he updated his profile
+		# for dummy in self.clients:
+		# 	if dummy != client_dummy:
+		# 		self.sendTextMessage(dummy.client, str(message))
+		pass
 
 	# noinspection SpellCheckingInspection
 	def get_client_dummy_from_qwebsocket_object(self, client: QWebSocket) -> CourierClientDummy:
 		return list(filter(lambda d: d.client == client, self.clients))[0]
 
-	def handle_private_message(self, client: QWebSocket, message: PrivateTextMessage):
-		client_dummy = self.get_client_dummy_from_qwebsocket_object(client)
-		message.sign(client_dummy.unique_id)
+	def handle_private_message(self, client: QWebSocket, message: Json):
+		# client_dummy = self.get_client_dummy_from_qwebsocket_object(client)
+		# message.sign(client_dummy.unique_id)
 		
-		# send to receiver
-		receiver: QWebSocket
-		for dummy in self.clients:
-			if dummy.unique_id == message.body.get("receiver_uid"):
-				receiver = dummy.client
-				self.sendTextMessage(receiver, str(message))
-				return
+		# # send to receiver
+		# receiver: QWebSocket
+		# for dummy in self.clients:
+		# 	if dummy.unique_id == message.body.get("receiver_uid"):
+		# 		receiver = dummy.client
+		# 		self.sendTextMessage(receiver, str(message))
+		# 		return
+		pass
 
 	@Slot()
 	def shutdown(self):

@@ -1,6 +1,9 @@
 # rubbie kelvin
 
 main(){
+	# did we just create this virtual env
+	local newvenv=0
+
 	# setup environment
 	echo "🎭 setting up virtual environment..."
 
@@ -11,6 +14,7 @@ main(){
 	else
 		echo "👀 creating virtual environment..."
 		if python -m venv venv; then
+			newvenv=1
 			echo "*" > venv/.gitignore
 			echo "⚡ activating virtual environment"
 			source venv/bin/activate
@@ -20,12 +24,17 @@ main(){
 		fi
 	fi
 
-	echo "👀 installing neccessary packages"
-	if python -m pip install -r requirements.txt; then
-		echo "" > /dev/null
+	if [[ "$newvenv" -eq 1 ]]; then
+		echo "👀 installing neccessary packages"
+		if python -m pip install -r requirements.txt; then
+			echo "" > /dev/null
+		else
+			echo "❌ couldnt install packages"
+			return
+		fi
 	else
-		echo "❌ couldnt install packages"
-		return
+		echo "💬 skipping package install..."
+		echo "💬 if you have any 'module not found' issue, run 'pip install -r requirements.txt'"
 	fi
 	
 	# check for ".qrc" file in workspace folder

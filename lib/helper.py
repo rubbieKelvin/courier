@@ -1,13 +1,22 @@
 import os
 import json
 import socket
+
 from PySide2.QtCore import Slot
+from PySide2.QtCore import Signal
 from PySide2.QtCore import QObject
 from PySide2.QtQml import QJSValue
+from PySide2.QtCore import Property
+from PySide2.QtCore import QDateTime 
+from PySide2.QtGui import QClipboard
 from PySide2.QtWebSockets import QWebSocketProtocol
 # ...
 from .server import CourierServer
 from .client import CourierClient
+
+from . import logger
+from . import username
+from .db import Person
 
 class Helper(QObject):
 	def __init__(self,
@@ -35,9 +44,19 @@ class Helper(QObject):
 				except json.JSONDecodeError:
 					pass
 
+		# def 
+
 		# whenever server starts running,
 		# connect client to server.
 		self.server.runningChanged.connect(self.connect_client_to_self)
+
+
+		# when client request for list of clients gets fufilled,
+		# handle event here
+		self.client.contactListReceived.connect(self.handle_client_list)
+		self.client.newPeerJoined.connect(self.handle_client_data)
+
+	usernameChanged = Signal(str)
 
 	@staticmethod
 	def __write(filename: str, data: str):
@@ -99,3 +118,47 @@ class Helper(QObject):
 		self._data = dict()
 		if self.dataroot:
 			Helper.__write(self.dataroot, '{}')
+
+	def _add_or_update_people_db(self, data: dict):
+		person = Person()
+
+		if not person.new(uid=data.get('uid'), username=data.get('username'), last_interaction=QDateTime.currentDateTime()):
+			if person.query.lastError().text().startswith(f"UNIQUE constraint failed: {person.__tablename__}.uid"):
+				# the person already exists.
+				# just try to update
+				if not person.update(data.get('uid'), username=data.get('username')):
+					logger.error(person.query.lastError())
+
+	def handle_client_list(self, data: dict):
+		clients: list = data.get('clients', [])
+
+		for client in clients:
+			self._add_or_update_people_db(client)
+			
+
+	def handle_client_data(self, data: dict):
+		client = data.get("client")
+		self._add_or_update_people_db(client)
+
+	@Slot(result="QVariantList")
+	def peersList(self) -> list:
+		person = Person()
+		peers = person.getAll()
+
+		if peers is None:
+			logger.debug("Error getting peers: ", person.query.lastError())
+			return []
+
+		return peers
+
+	def set_username(self, username_: str):
+		username(username_)
+		self.usernameChanged.emit(username_)
+
+	@Property(str, fset=set_username, notify=usernameChanged)
+	def username(self):
+		return username()
+
+	@Slot(str)
+	def saveTextToClipboard(self, text: str):
+		QClipboard().setText(text)

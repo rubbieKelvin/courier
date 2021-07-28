@@ -10,12 +10,18 @@ Rectangle{
 	color: "transparent"
 	height: 60
 
+	property alias name: contact_name.text
+	property alias tip: tip.text
+	property alias subtext: contact_description.text
+
 	RippleArea{
 		id: mouse
 		anchors.fill: parent
 		color: theme.secondary
+		hoverEnabled: true
 		acceptedButtons: Qt.RightButton | Qt.LeftButton
 		property string button: ""
+		property bool hovered: false
 
 		onPressed: {
 			button = pressedButtons & Qt.RightButton ? "r" : "l"
@@ -28,10 +34,20 @@ Rectangle{
 				return menu.open()
 			}
 		}
+
+		onEntered: hovered = true
+		onExited: hovered = false
 	}
 
 	ContactItemPopup{
 		id: menu
+	}
+
+	CustomTip{
+		id: tip
+		visible: mouse.hovered
+		delay: 2000
+		timeout: 2000
 	}
 
 	RowLayout{
@@ -40,6 +56,7 @@ Rectangle{
 		anchors.rightMargin: 10
 		anchors.topMargin: 7
 		anchors.bottomMargin: 7
+		clip: true
 
 		RoundImage{
 			sourceSize.width: 40

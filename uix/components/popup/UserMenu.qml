@@ -83,14 +83,64 @@ Popup {
 				}
 
 				Column{
+					clip: true
 					spacing: 4
 					Layout.fillHeight: false
 					Layout.fillWidth: true
 
 					Label{
 						id: contact_name
-						text: "Carlie Anderson"
+						text: {
+							if (helper) return helper.username
+							return "Anonymous"
+						}
 						color: theme.text
+						enabled: visible
+
+						MouseArea{
+							id: m
+							hoverEnabled: true
+							anchors.fill: parent
+							cursorShape: Qt.PointingHandCursor
+							property bool hovered: false
+							onDoubleClicked: {
+								contact_name.visible = false
+								username_field.visible = true
+								username_field.focus = true
+								username_field.text = contact_name.text
+							}
+							onEntered: hovered = true
+							onExited:  hovered = false
+						}
+
+						CustomTip{
+							visible: m.hovered
+							text: "double click to change username"
+							delay: 1000
+							timeout: 5000
+						}
+					}
+
+					TextField{
+						id: username_field
+						placeholderText: "username"
+						visible: false
+						color: theme.text
+						enabled: visible
+						height: contact_name.height
+						padding: 0
+						maximumLength: 25
+						selectByMouse: true
+						background: Rectangle{
+							color: "transparent"
+						}
+
+						onAccepted: {
+							if (text) helper.username = text
+							visible = false
+							contact_name.visible = true
+							// TODO: change username on server under this line
+						}
 					}
 
 					Label{
@@ -495,6 +545,20 @@ Popup {
 					text = helper.hostname()
 					t_.start()
 				}
+
+				CustomTip{
+					id: ip_copy_tip
+					timeout: 1500
+					text: {
+						if (helper) return `Copied '${helper.ip()}' to clipbaord`
+						return "Copied ip to clipboard"
+					}
+				}
+
+				onClicked: {
+					helper.saveTextToClipboard(helper.ip())
+					ip_copy_tip.visible = true
+				}
 			}
 		}
 	}
@@ -502,5 +566,7 @@ Popup {
 	onClosed: {
 		server_password_container.shown = false
 		client_form_container.shown = false
+		contact_name.visible = true
+		username_field.visible = false
 	}
 }
