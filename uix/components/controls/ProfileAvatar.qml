@@ -10,7 +10,10 @@ Rectangle{
 	property alias menu: menu
 
 	RoundImage{
-		source: "../../assets/avatars/001-man.svg"
+		source: {
+			if (helper) return helper.profilephoto
+			return ''
+		}
 		anchors.fill: parent
 		sourceSize.height: 34
 		sourceSize.width: 34

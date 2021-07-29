@@ -64,14 +64,14 @@ class Person(Db):
 		return self.query.exec_()
 
 	def getAll(self) -> list:
-		SQL = """
+		SQL = f"""
 		SELECT
 			id,
 			uid,
 			username,
 			avatar,
 			last_interaction
-		FROM people
+		FROM {self.__tablename__}
 		"""
 		result = []
 		if self.query.exec_(SQL):
@@ -94,9 +94,8 @@ class Message(Db):
 		id            INTEGER  PRIMARY KEY AUTOINCREMENT,
 		body          TEXT,
 		time_uploaded DATETIME NOT NULL,
-		message_uid   STRING   UNIQUE
-							NOT NULL,
-		sender                 REFERENCES people (id) ON DELETE CASCADE,
+		message_uid   STRING UNIQUE NOT NULL,
+		sender        REFERENCES people (id) ON DELETE CASCADE,
 		attached_file STRING,
 		replying_to   STRING
 	)

@@ -1,12 +1,14 @@
 import QtQuick 2.15
 import QtQuick.Controls 2.5
 import QtQuick.Layouts 1.9
+import QtQuick.Dialogs 1.2
+import Qt.labs.platform 1.1
+import QtGraphicalEffects 1.15
 import "../controls"
 import "../widgets"
 import "../utils"
 import "../popup"
 import "../utils/svg.js" as Svg
-import QtGraphicalEffects 1.15
 import "../utils/constants.js" as Constants
 
 Popup {
@@ -76,10 +78,21 @@ Popup {
 				RoundImage{
 					sourceSize.width: 40
 					sourceSize.height: 40
-					width: 40
-					height: 40
+					Layout.preferredWidth: 40
+					Layout.preferredHeight: 40
 					radius: width/2
-					source: "../../assets/avatars/001-man.svg"
+					source: {
+						if (helper) return helper.profilephoto
+						return ''
+					}
+
+					MouseArea{
+						anchors.fill: parent
+						cursorShape: Qt.PointingHandCursor
+						hoverEnabled: true
+
+						onClicked: profile_picture_dialog.open()
+					}
 				}
 
 				Column{
@@ -568,5 +581,18 @@ Popup {
 		client_form_container.shown = false
 		contact_name.visible = true
 		username_field.visible = false
+	}
+
+	FileDialog{
+		id: profile_picture_dialog
+		folder: StandardPaths.writableLocation(StandardPaths.PicturesLocation)
+		acceptLabel: "Use photo"
+		nameFilters: ['Image Files (*.png *.jpg *.jpeg)']
+
+		onAccepted: {
+			// set photo
+			// TODO: use a worker script to stop gui freeze on large images
+			helper.profilephoto = file
+		}
 	}
 }

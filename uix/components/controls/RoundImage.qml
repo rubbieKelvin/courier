@@ -7,9 +7,10 @@ Image {
     id: root
     property bool rounded: true
     property bool adapt: true
-    property int radius: 5
+	property int radius: 5
+	fillMode: Image.PreserveAspectCrop
 
-    layer.enabled: rounded
+	layer.enabled: rounded
     layer.effect: OpacityMask {
         maskSource: Item {
             width: root.width
@@ -23,3 +24,8 @@ Image {
         }
     }
 }
+/*##^##
+Designer {
+	D{i:0;autoSize:true;height:480;width:640}
+}
+##^##*/

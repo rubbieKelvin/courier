@@ -31,12 +31,8 @@ Page {
 		ChatBody{
 			Layout.fillHeight: true
 			Layout.fillWidth: true
-			list.model: 30
-			list.delegate: ChatBalloon{
-				width: (parent || {width: 0}).width
-				showAtLeft: !!(modelData%3)
-				label.text: "This is a simple example."
-			}
+			list.model: root.model
+			list.delegate: ChatBalloon{}
 		}
 
 		ChatFooter{

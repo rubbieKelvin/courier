@@ -1,14 +1,19 @@
 import os
 import json
 import socket
+from uuid import uuid4
 
+from PySide2.QtCore import Qt
+from PySide2.QtCore import QUrl
 from PySide2.QtCore import Slot
+from PySide2.QtGui import QImage
 from PySide2.QtCore import Signal
 from PySide2.QtCore import QObject
 from PySide2.QtQml import QJSValue
 from PySide2.QtCore import Property
 from PySide2.QtCore import QDateTime 
 from PySide2.QtGui import QClipboard
+from PySide2.QtCore import QStandardPaths
 from PySide2.QtWebSockets import QWebSocketProtocol
 # ...
 from .server import CourierServer
@@ -44,7 +49,8 @@ class Helper(QObject):
 				except json.JSONDecodeError:
 					pass
 
-		# def 
+		# ...
+		self._photo = QUrl.fromLocalFile(self.getItemData("profile_photo")).toString() or QUrl("qrc:/uix/assets/avatars/001-man.svg").toString()
 
 		# whenever server starts running,
 		# connect client to server.
@@ -58,6 +64,7 @@ class Helper(QObject):
 		self.client.clientProfileUpdateReceived.connect(self.handle_client_profile_update)
 
 	usernameChanged = Signal(str)
+	profilePhotoChanged = Signal(str)
 
 	@staticmethod
 	def __write(filename: str, data: str):
@@ -97,7 +104,7 @@ class Helper(QObject):
 	@Slot("QVariant")
 	def setItemData(self, kv: QJSValue):
 		"""sets key:value pairs to local data"""
-		kv = kv.toVariant()
+		kv = kv if type(kv) is dict else kv.toVariant()
 		self._data.update(kv)
 		if self.dataroot:
 			data = json.dumps(self._data)
@@ -171,3 +178,28 @@ class Helper(QObject):
 	@Slot(str)
 	def saveTextToClipboard(self, text: str):
 		QClipboard().setText(text)
+
+
+	def set_photo(self, file: str):
+		# load image
+		image = QImage(QUrl(file).toLocalFile())
+
+		# scale image 1:1
+		# image size should be 300x300 or min(height, width)
+		square = min(300, min(image.height(), image.width()))
+		image = image.scaled(square, square, Qt.KeepAspectRatioByExpanding)
+
+		# now save image in new file
+		new_file = os.path.join(
+			QStandardPaths.writableLocation(QStandardPaths.AppDataLocation),
+			"user", "profile_photo", f"photo-{uuid4()}.png")
+		image.save(new_file)
+
+		# set and emit
+		self.setItemData({"profile_photo": new_file})
+		self._photo = QUrl.fromLocalFile(new_file).toString()
+		self.profilePhotoChanged.emit(self._photo)
+
+	@Property(str, notify=profilePhotoChanged, fset=set_photo)
+	def profilephoto(self) -> str:
+		return self._photo

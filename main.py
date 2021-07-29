@@ -62,7 +62,9 @@ if __name__ == "__main__":
 				sent=None,
 				recieved=None
 			),
-			user=None,
+			user=dict(
+				profile_photo=None
+			),
 			database=None,
 		))
 

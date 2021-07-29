@@ -59,3 +59,25 @@ class TestPeopleDatabase(unittest.TestCase):
 		data = person.getAll()
 		print(data)
 		self.assertTrue(type(data) is list)
+
+class TestMessageDatabase(unittest.TestCase):
+	def setUp(self):
+		if os.path.exists(db.FILENAME):
+			os.remove(db.FILENAME)
+		db.init("")
+
+		person = db.Person()
+		data = [
+			dict(
+				uid=uuid4().__str__(),
+				username=f"person_{_}",
+				last_interaction=QDateTime.currentDateTime()
+			) for _ in range(2)
+		]
+
+		for one in data:
+			person.new(**one)
+
+	def test_create_message(self):
+		message = db.Message()
+		message.new(body="hello", time_uploaded=QDateTime.currentDateTime(), message_uid=uuid4().__str__(), sender=1)
