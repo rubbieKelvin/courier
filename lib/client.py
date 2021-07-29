@@ -23,12 +23,14 @@ from PySide2.QtWebSockets import QWebSocketProtocol
 
 from .messages import INTENT_NEW_PEER
 from .messages import INTENT_HANDSHAKE
+from .messages import INTENT_PROFILE_UPDATE
 from .messages import INTENT_CONTACT_LIST_REQUEST
 
 from .queue import MessageQueue
 
 from .messages import Json
 from .messages import ClientHandShakeMessage
+from .messages import ClientProfileUpdateMessage
 
 
 # class FileTransferWorker(QThread):
@@ -204,15 +206,19 @@ class CourierClient(QWebSocket):
 		""" this method will be called once a text is recieved from the server.
 		"""
 		message: Json = Json.from_str(text)
+		intent: str = message.get('intent')
 
-		if message.get('intent') == INTENT_HANDSHAKE:
+		if intent == INTENT_HANDSHAKE:
 			self.handle_handshake(message)
 
-		elif message.get('intent') == INTENT_CONTACT_LIST_REQUEST:
+		elif intent == INTENT_CONTACT_LIST_REQUEST:
 			self.handle_contact_list_request(message)
 
-		elif message.get('intent') == INTENT_NEW_PEER:
+		elif intent == INTENT_NEW_PEER:
 			self.handle_new_peer_intent(message)
+
+		elif intent == INTENT_PROFILE_UPDATE:
+			self.handle_client_profile_update(message)
 
 		else:
 			logger.warn("got message with unregistered intent:", message)
@@ -262,6 +268,9 @@ class CourierClient(QWebSocket):
 
 	def handle_client_profile_update(self, message: Json):
 		# noinspection PyUnresolvedReferences
+		""" this method is called when another client updates its profile.
+		this data should be handled in some helper class, or in qml file.
+		"""
 		self.clientProfileUpdateReceived.emit(message.to_dict())
 
 	def handle_pm_intent(self, message: Json):
@@ -291,7 +300,7 @@ class CourierClient(QWebSocket):
 	def on_disconnected(self):
 		""" client has been disconnected
 		"""
-		print("client disconnected")
+		logger.log("client disconnected")
 		self._running = False
 		self._handshake_successful = False
 		self.runningChanged.emit(self._running)
@@ -303,3 +312,9 @@ class CourierClient(QWebSocket):
 	@Property(bool, notify=handshakeDone)
 	def handshake_successful(self) -> bool:
 		return self._handshake_successful
+
+	@Slot(str)
+	def updateUsernameOnServer(self, username: str):
+		message = ClientProfileUpdateMessage(username=username)
+		logger.debug("updating username on server")
+		self.sendTextMessage(message.__str__())

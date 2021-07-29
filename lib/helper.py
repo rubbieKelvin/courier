@@ -51,10 +51,11 @@ class Helper(QObject):
 		self.server.runningChanged.connect(self.connect_client_to_self)
 
 
-		# when client request for list of clients gets fufilled,
-		# handle event here
+		# when client request for list of clients gets fufilled, handle data
+		# also handle profile changes
 		self.client.contactListReceived.connect(self.handle_client_list)
 		self.client.newPeerJoined.connect(self.handle_client_data)
+		self.client.clientProfileUpdateReceived.connect(self.handle_client_profile_update)
 
 	usernameChanged = Signal(str)
 
@@ -140,6 +141,13 @@ class Helper(QObject):
 		client = data.get("client")
 		self._add_or_update_people_db(client)
 
+	def handle_client_profile_update(self, data: dict):
+		person = Person()
+		profile = data.get('profile', {})
+		if profile:
+			if not person.update(data.get('uid'), **profile):
+				logger.error(person.query.lastError())
+
 	@Slot(result="QVariantList")
 	def peersList(self) -> list:
 		person = Person()
@@ -153,6 +161,7 @@ class Helper(QObject):
 
 	def set_username(self, username_: str):
 		username(username_)
+		self.client.updateUsernameOnServer(username_)
 		self.usernameChanged.emit(username_)
 
 	@Property(str, fset=set_username, notify=usernameChanged)

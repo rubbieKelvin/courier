@@ -32,12 +32,12 @@ Rectangle{
 
 	Rectangle{
 		x: 25
-		y: 25
+		y: 30
 		radius: width/2
 		anchors.left: parent.left
 		anchors.bottom: parent.bottom
-		anchors.bottomMargin: -3
-		anchors.leftMargin: -5
+		anchors.bottomMargin: 2
+		anchors.leftMargin: 2
 		width: 8
 		height: width
 		border.color: theme.stroke
@@ -49,6 +49,6 @@ Rectangle{
 
 /*##^##
 Designer {
-	D{i:0;formeditorZoom:8}
+	D{i:0;autoSize:true;formeditorZoom:10;height:40;width:40}
 }
 ##^##*/

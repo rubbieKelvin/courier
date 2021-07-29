@@ -18,11 +18,13 @@ from PySide2.QtWebSockets import QWebSocketProtocol
 from .queue import MessageQueue
 
 from .messages import INTENT_HANDSHAKE
+from .messages import INTENT_PROFILE_UPDATE
 
 from .messages import Json
 from .messages import AuthStatusMessage
 from .messages import ClientDataMessage
 from .messages import ConnectedClientsMessage
+from .messages import ClientProfileUpdateWithUidMessage
 
 
 class CourierClientDummy:
@@ -190,6 +192,9 @@ class CourierServer(QWebSocketServer):
 		if message.get('intent') == INTENT_HANDSHAKE:
 			self.handle_handshake_intent(client, message)
 
+		elif message.get('intent') == INTENT_PROFILE_UPDATE:
+			self.handle_profile_update_intent(client, message)
+
 		else:
 			logger.warn("message with unregistered intent:", message)
 
@@ -225,17 +230,20 @@ class CourierServer(QWebSocketServer):
 		self.sendTextMessage(client, str(message))
 			
 	def handle_profile_update_intent(self, client: QWebSocket, message: Json):
-		# client_dummy = self.get_client_dummy_from_qwebsocket_object(client)
-		# profile: dict = message.body
+		""" whenever a client updates it's profile, this method id called.
+		with message containing 'profile' key which holds the updated profile.
+		"""
+		dummy = self.get_client_dummy_from_qwebsocket_object(client)
+		profile: dict = message.get('profile')
 
-		# if profile.get("username"):
-		# 	client_dummy.username = profile.get("username")
+		if profile.get("username"):
+			dummy.username = profile.get("username")
 
-		# # now tell everyone asides $client that he updated his profile
-		# for dummy in self.clients:
-		# 	if dummy != client_dummy:
-		# 		self.sendTextMessage(dummy.client, str(message))
-		pass
+		# now tell everyone asides $client that he updated his profile
+		new_message = ClientProfileUpdateWithUidMessage(uid=dummy.uid, profile=message)
+		for other_dummy in self.clients:
+			if other_dummy != dummy:
+				self.sendTextMessage(other_dummy.client, str(new_message))
 
 	# noinspection SpellCheckingInspection
 	def get_client_dummy_from_qwebsocket_object(self, client: QWebSocket) -> CourierClientDummy:

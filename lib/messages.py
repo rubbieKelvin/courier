@@ -231,6 +231,11 @@ class Json:
 			return Json(**data)
 		return Json(data=data)
 
+	def copy(self):
+		j = Json()
+		j.data = self.data.copy()
+		return j
+
 
 #####################################################################################
 
@@ -262,3 +267,24 @@ class ClientDataMessage(Json):
 		used to send client data to other clients
 		"""
 		super().__init__(client=client, intent=INTENT_NEW_PEER)
+
+class ClientProfileUpdateMessage(Json):
+	def __init__(self, username:str=None) -> None:
+		""" Client uses this to send data to server about profile changes.
+		the server will share it to other users, who will now update it on thier database
+		"""
+		profile = dict()
+		
+		if username:
+			profile['username'] = username
+
+		super().__init__(profile=profile, intent=INTENT_PROFILE_UPDATE)
+
+class ClientProfileUpdateWithUidMessage(Json):
+	def __init__(self, uid:str, profile: Json) -> None:
+		""" The server uses this to broadcast to other clients, the updated client's profile.
+		adding a 'uid' key to the ClientProfileUpdateMessage.
+		"""
+		profile = profile.copy()
+		profile.data['uid'] = uid
+		super().__init__(**profile.to_dict())

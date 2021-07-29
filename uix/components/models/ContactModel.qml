@@ -6,7 +6,7 @@ ListModel{
 
 	readonly property list<Connections> connections:[
 		Connections{
-			id: _1
+			id: con1
 			target: client
 
 			function _prepNewPeer(peer){
@@ -37,21 +37,21 @@ ListModel{
 				*/
 
 				const client = message.client
-				_1.addClientDataToModel(client)
+				con1.addClientDataToModel(client)
 			}
 
 			function onContactListReceived(message){
 				const clients = message.clients
 				clients.forEach(function(client){
-					_1.addClientDataToModel(client)
+					con1.addClientDataToModel(client)
 				})
 			}
 
 			function addClientDataToModel(client){
 				/* adds a single client data to the model.
 				*/
-				_1._prepNewPeer(client)
-				const peer_uid = _1.hasPeerWithUID(client.uid)
+				con1._prepNewPeer(client)
+				const peer_uid = con1.hasPeerWithUID(client.uid)
 
 				if (peer_uid === null){
 					root.append(client)
@@ -59,6 +59,16 @@ ListModel{
 					// if the person exists, try to update the data in model.
 					// database update would have already been done in python script, Helper class.
 					root.set(peer_uid, client)
+				}
+			}
+
+			function onClientProfileUpdateReceived(data){
+				const uid = data.uid
+				const profile = data.profile
+
+				const i = con1.hasPeerWithUID(uid)
+				if (i!==null){
+					root.set(i, profile)
 				}
 			}
 		}
