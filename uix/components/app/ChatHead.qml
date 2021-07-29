@@ -9,6 +9,9 @@ Rectangle {
 	height: 40
 	color: theme.secondary
 
+	property string uid
+	property string username
+
 	RowLayout{
 		anchors.fill: parent
 		anchors.leftMargin: 10
@@ -25,7 +28,7 @@ Rectangle {
 		}
 
 		Label{
-			text: "carlie anderson"
+			text: username
 			Layout.fillWidth: true
 			color: theme.text
 		}

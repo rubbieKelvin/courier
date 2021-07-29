@@ -1,7 +1,6 @@
 import QtQuick 2.9
 import QtQuick.Controls 2.5
 import "../widgets"
-import "../models"
 import "../utils/helper.js" as Helper
 
 BorderedRectangle{
@@ -18,7 +17,7 @@ BorderedRectangle{
 
 		ListView{
 			id: list
-			model: ContactModel{}
+			model: contact_model
 			anchors.fill: parent
 			boundsBehavior: Flickable.StopAtBounds
 			clip: true
@@ -27,7 +26,18 @@ BorderedRectangle{
 				name: username.trim()
 				tip: `You can now chat with ${username.trim()}`
 				subtext: Helper.truncate(`You can now chat with ${username.trim()}`, 30)
+
+				onClicked: {
+					const i = list.indexAt(x, y)
+					list.currentIndex = i
+				}
 			}
+			highlight: Rectangle{
+				color: theme.secondary
+				opacity: .7
+			}
+
+			onCurrentIndexChanged: _currentPeerIndex=currentIndex
 		}
 	}
 }

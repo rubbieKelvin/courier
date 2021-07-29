@@ -14,6 +14,8 @@ Rectangle{
 	property alias tip: tip.text
 	property alias subtext: contact_description.text
 
+	signal clicked()
+
 	RippleArea{
 		id: mouse
 		anchors.fill: parent
@@ -32,6 +34,8 @@ Rectangle{
 				menu.x = mouseX
 				menu.y = mouseY-menu.height
 				return menu.open()
+			}else{
+				root.clicked()
 			}
 		}
 

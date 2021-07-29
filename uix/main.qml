@@ -6,6 +6,7 @@ import Qt.labs.platform 1.1
 import "./components/app"
 import "./components/utils"
 import "./components/popup"
+import "./components/models"
 import "./components/utils/svg.js" as Svg
 import "./components/utils/constants.js" as Constants
 
@@ -24,6 +25,12 @@ ApplicationWindow {
 	}
 
 	property string settingsFileName: "settings.ini"
+	property ContactModel contact_model: ContactModel{}
+
+	// when a peer is clicked on the left side, this value will change
+	// which will then be used to update the chatstack
+	property int _currentPeerIndex: -1
+
 
 	// this property tells what state the server/client pair is in
 	readonly property string courier_state: {

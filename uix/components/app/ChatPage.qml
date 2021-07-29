@@ -2,11 +2,19 @@ import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 import "../widgets"
+import "../models"
 
 Page {
 	id: root
 	background: Rectangle{
 		color: theme.background
+	}
+
+	property string client_uid
+	property string client_username
+
+	readonly property MessageModel model: MessageModel{
+		client_uid: current_chat_page.client_uid
 	}
 
 	ColumnLayout{
@@ -16,6 +24,8 @@ Page {
 		ChatHead{
 			Layout.fillWidth: true
 			Layout.preferredHeight: 40
+			uid: client_uid
+			username: client_username
 		}
 
 		ChatBody{
@@ -31,7 +41,6 @@ Page {
 
 		ChatFooter{
 			Layout.fillWidth: true
-
 		}
 	}
 }
