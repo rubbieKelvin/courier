@@ -19,6 +19,7 @@ from .queue import MessageQueue
 
 from .messages import INTENT_HANDSHAKE
 from .messages import INTENT_PROFILE_UPDATE
+from .messages import INTENT_PRIVATE_MESSAGE
 
 from .messages import Json
 from .messages import AuthStatusMessage
@@ -188,12 +189,16 @@ class CourierServer(QWebSocketServer):
 
 		client: QWebSocket = self.sender()
 		message: Json = Json.from_str(text)
+		intent: str = message.get('intent')
 
-		if message.get('intent') == INTENT_HANDSHAKE:
+		if intent == INTENT_HANDSHAKE:
 			self.handle_handshake_intent(client, message)
 
-		elif message.get('intent') == INTENT_PROFILE_UPDATE:
+		elif intent == INTENT_PROFILE_UPDATE:
 			self.handle_profile_update_intent(client, message)
+
+		elif intent == INTENT_PRIVATE_MESSAGE:
+			self.handle_private_message(client, message)
 
 		else:
 			logger.warn("message with unregistered intent:", message)
@@ -247,24 +252,31 @@ class CourierServer(QWebSocketServer):
 
 	# noinspection SpellCheckingInspection
 	def get_client_dummy_from_qwebsocket_object(self, client: QWebSocket) -> CourierClientDummy:
+		"""finds the dummy assoiciated with client"""
 		return list(filter(lambda d: d.client == client, self.clients))[0]
 
 	def handle_private_message(self, client: QWebSocket, message: Json):
-		# client_dummy = self.get_client_dummy_from_qwebsocket_object(client)
-		# message.sign(client_dummy.unique_id)
-		
+		""" this function is called when a private text is recieved.
+		the text is sent to the client who's dummy has the matching uid. 
+		"""
+		dummy = self.get_client_dummy_from_qwebsocket_object(client)
+		txt_message: dict = message.get('message', {})
+
 		# # send to receiver
-		# receiver: QWebSocket
-		# for dummy in self.clients:
-		# 	if dummy.unique_id == message.body.get("receiver_uid"):
-		# 		receiver = dummy.client
-		# 		self.sendTextMessage(receiver, str(message))
-		# 		return
-		pass
+		receiver: QWebSocket
+		for recv_dummy in self.clients:
+			if recv_dummy.uid  == txt_message.get('recv_uid'):
+				self.sendTextMessage(recv_dummy.client, str(message))
+				return
 
 	@Slot()
 	def shutdown(self):
+		""" do away with all the connected clients and then stop listening for connections
+		"""
+		
 		for dummy in self.clients:
 			dummy.client.close(QWebSocketProtocol.CloseCodeGoingAway, "server shutdown")
 		self.clients.clear()
 		self.close()
+
+# TODO: onclient disconnect, remove client from clients list

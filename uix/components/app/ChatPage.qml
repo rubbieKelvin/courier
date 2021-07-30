@@ -32,7 +32,29 @@ Page {
 			Layout.fillHeight: true
 			Layout.fillWidth: true
 			list.model: root.model
-			list.delegate: ChatBalloon{}
+			list.delegate: ChatBalloon{
+				width: (parent || {width: 0}).width
+				showAtLeft: message.sender_uid===client_uid
+				txt: message.text
+			}
+
+			Connections{
+				target: client
+
+				function onPrivateMessageSent(msg_data){
+					// if it was sent to this guy, add to model
+					const message = msg_data.message
+					if (message.recv_uid === client_uid)
+						root.model.append(msg_data)
+				}
+
+				function onPrivateMessageReceived(msg_data){
+					// if it was recieved from this guy, add to model
+					const message = msg_data.message
+					if (message.sender_uid === client_uid)
+						root.model.append(msg_data)
+				}
+			}
 		}
 
 		ChatFooter{

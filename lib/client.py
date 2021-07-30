@@ -24,12 +24,14 @@ from PySide2.QtWebSockets import QWebSocketProtocol
 from .messages import INTENT_NEW_PEER
 from .messages import INTENT_HANDSHAKE
 from .messages import INTENT_PROFILE_UPDATE
+from .messages import INTENT_PRIVATE_MESSAGE
 from .messages import INTENT_CONTACT_LIST_REQUEST
 
 from .queue import MessageQueue
 
 from .messages import Json
 from .messages import ClientHandShakeMessage
+from .messages import ClientPrivateTextMessage
 from .messages import ClientProfileUpdateMessage
 
 
@@ -158,13 +160,19 @@ class CourierClient(QWebSocket):
 		return True
 
 	@Slot(str, str)
-	def sendPrivateMessage(self, text: str, to: str):
-		# message = PrivateTextMessage(uuid4(), text, to)
-		# # message will be signed at the server
-		# self.sendTextMessage(str(message))
+	def sendPrivateMessage(self, text: str, recv_uid: str):
+		""" send a text message `text` to a client with uid==`recv_uid`.
+		the server will recieve the message and send to the client who the message is assigned to.
+		"""
+		message = ClientPrivateTextMessage(
+			text=text,
+			recv_uid=recv_uid,
+			sender_uid=getUniqueId()
+		)
+		self.sendTextMessage(str(message))
+
 		# # noinspection PyUnresolvedReferences
-		# self.privateMessageSent.emit(message.toDict())
-		pass
+		self.privateMessageSent.emit(message.to_dict())
 
 	@Slot(str, str, str)
 	def sendFile(self, message: str, file_url: str, to: str):
@@ -220,6 +228,9 @@ class CourierClient(QWebSocket):
 		elif intent == INTENT_PROFILE_UPDATE:
 			self.handle_client_profile_update(message)
 
+		elif intent == INTENT_PRIVATE_MESSAGE:
+			self.handle_pm_intent(message)
+
 		else:
 			logger.warn("got message with unregistered intent:", message)
 
@@ -274,14 +285,10 @@ class CourierClient(QWebSocket):
 		self.clientProfileUpdateReceived.emit(message.to_dict())
 
 	def handle_pm_intent(self, message: Json):
-		# if not message.signer:
-		# 	logger.warn(
-		# 		"there's a problem with the received message.",
-		# 		"message has not been signed"
-		# 	)
-		# # noinspection PyUnresolvedReferences
-		# self.privateMessageReceived.emit(message.toDict())
-		pass
+		""" this method is called when the client get the message
+		written to it from another client.
+		"""
+		self.privateMessageReceived.emit(message.to_dict())
 
 	def on_connected(self):
 		""" send auth details. after auth details are sent,

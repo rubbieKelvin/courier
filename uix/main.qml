@@ -165,6 +165,9 @@ ApplicationWindow {
 	}
 }
 
+/* TODO: make the stack that holds chatpage.qml and filepage.qml a StackLayout instead of StackView
+  so the chatpage.qml doesnt reconstruct every time, costing us machine resource.
+*/
 /*##^##
 Designer {
 	D{i:0;formeditorZoom:0.66}

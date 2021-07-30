@@ -11,6 +11,7 @@ from datetime import datetime
 from PySide2.QtCore import QUrl
 from PySide2.QtCore import QFile
 from PySide2.QtQml import QJSValue
+from PySide2.QtCore import QDateTime
 # from PySide2.QtCore import QIODevice
 # from PySide2.QtCore import QByteArray
 # from PySide2.QtCore import QStandardPaths
@@ -288,3 +289,16 @@ class ClientProfileUpdateWithUidMessage(Json):
 		profile = profile.copy()
 		profile.data['uid'] = uid
 		super().__init__(**profile.to_dict())
+
+class ClientPrivateTextMessage(Json):
+	def __init__(self, text:str, recv_uid: str, sender_uid: str, sticker_id:int=None) -> None:
+		super().__init__(
+			intent=INTENT_PRIVATE_MESSAGE,
+			message=dict(
+				text=text,
+				recv_uid=recv_uid,
+				sender_uid=sender_uid,
+				sticker_id=sticker_id,
+				uid=uuid.uuid4().__str__(),
+				timestamp=QDateTime.currentDateTime().toString()
+			))

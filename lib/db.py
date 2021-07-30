@@ -93,7 +93,7 @@ class Message(Db):
 	CREATE TABLE IF NOT EXISTS {__tablename__} (
 		id            INTEGER  PRIMARY KEY AUTOINCREMENT,
 		body          TEXT,
-		time_uploaded DATETIME NOT NULL,
+		timestamp	  DATETIME NOT NULL,
 		message_uid   STRING UNIQUE NOT NULL,
 		sender        REFERENCES people (id) ON DELETE CASCADE,
 		attached_file STRING,

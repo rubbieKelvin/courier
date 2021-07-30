@@ -65,6 +65,13 @@ BorderedRectangle {
 			background: Rectangle{
 				color: "transparent"
 			}
+
+			onAccepted: {
+				const txt = text.trim()
+				if (txt)
+					client.sendPrivateMessage(txt, client_uid)
+				text=""
+			}
 		}
 
 		Rectangle{

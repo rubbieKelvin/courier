@@ -5,7 +5,7 @@ import QtQuick.Layouts 1.15
 RowLayout {
 	id: root
 	property bool showAtLeft: true
-	readonly property alias label: text_
+	property alias txt: text_.text
 
 	Item{
 		Layout.fillWidth: !showAtLeft
