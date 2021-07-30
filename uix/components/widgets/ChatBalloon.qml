@@ -5,7 +5,8 @@ import QtQuick.Layouts 1.15
 RowLayout {
 	id: root
 	property bool showAtLeft: true
-	property alias txt: text_.text
+	property alias label: text_
+	property int maxLabelWidth: 400
 
 	Item{
 		Layout.fillWidth: !showAtLeft
@@ -14,30 +15,29 @@ RowLayout {
 
 	// main stuff
 	ColumnLayout{
-		spacing: 1
+		spacing: 8
 
-		Rectangle{
-			id: balloon_rect
-			color: showAtLeft ? theme.secondary : theme.accent
-			radius: 10
-			Layout.preferredHeight: childrenRect.height + 20
-			Layout.preferredWidth: childrenRect.width + 20
-
-			Label{
-				id: text_
-				color: showAtLeft ? theme.text : "white"
-				anchors.centerIn: parent
+		Label{
+			id: text_
+			color: showAtLeft ? theme.text : "white"
+			font.pixelSize: 10
+			wrapMode: Text.WordWrap
+			padding: 10
+			Layout.maximumWidth: maxLabelWidth
+			background: Rectangle{
+				radius: 10
+				color: showAtLeft ? theme.secondary : theme.accent
 			}
 		}
 
 		Label{
 			id: time_text
-			font.pixelSize: 9
+			font.pixelSize: 8
 			horizontalAlignment: showAtLeft ? Text.AlignLeft : Text.AlignRight
 			verticalAlignment: Text.AlignVCenter
 			color: theme.disabled
 			text: "00:00am"
-			Layout.preferredWidth: balloon_rect.width
+			Layout.preferredWidth: text_.width
 
 		}
 	}
@@ -47,3 +47,9 @@ RowLayout {
 		Layout.preferredHeight: 5
 	}
 }
+
+/*##^##
+Designer {
+	D{i:0;formeditorZoom:0.33;width:1300}
+}
+##^##*/

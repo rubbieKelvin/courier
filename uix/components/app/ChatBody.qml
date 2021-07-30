@@ -17,6 +17,10 @@ Rectangle {
 			anchors.margins: 8
 			clip: true
 			spacing: 8
+
+			onCountChanged: {
+				currentIndex = count -1
+			}
 		}
 	}
 }

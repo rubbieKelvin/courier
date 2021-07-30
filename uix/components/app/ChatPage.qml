@@ -35,7 +35,8 @@ Page {
 			list.delegate: ChatBalloon{
 				width: (parent || {width: 0}).width
 				showAtLeft: message.sender_uid===client_uid
-				txt: message.text
+				label.text: message.text
+				maxLabelWidth: width - 100
 			}
 
 			Connections{
