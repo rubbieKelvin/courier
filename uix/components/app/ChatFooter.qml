@@ -11,7 +11,7 @@ import "../utils/helper.js" as Helper
 
 BorderedRectangle {
 	id: root
-	height: 55
+	height: 50
 	color: theme.background
 	topborder.color: theme.stroke
 	property string selectedFileUrl: ""
@@ -32,6 +32,13 @@ BorderedRectangle {
 		root.state = ""
 		min_counter.stop()
 		sec_counter.stop()
+	}
+
+	function send_text_message(){
+		const txt = msg_field.text.trim()
+		if (txt)
+			client.sendPrivateMessage(txt, client_uid)
+		msg_field.text=""
 	}
 
 	// base state
@@ -57,20 +64,32 @@ BorderedRectangle {
 			tiptext: "Sticker Set"
 		}
 
-		TextField{
-			id: msg_field
+		ScrollView{
+			ScrollBar.horizontal.policy: ScrollBar.AlwaysOff
+			ScrollBar.vertical.policy: ScrollBar.AsNeeded
 			Layout.fillWidth: true
-			placeholderText: "Type Something..."
-			color: theme.text
-			background: Rectangle{
-				color: "transparent"
-			}
+			Layout.fillHeight: true
 
-			onAccepted: {
-				const txt = text.trim()
-				if (txt)
-					client.sendPrivateMessage(txt, client_uid)
-				text=""
+			TextArea{
+				id: msg_field
+				placeholderText: "Type Something..."
+				color: theme.text
+				focus: true
+				font.pixelSize: 10
+				background: Rectangle{
+					color: "transparent"
+				}
+
+				property bool ctrl: false
+
+				Keys.onPressed: {
+					if (event.key === Qt.Key_Control) ctrl = true
+					if ((event.key === Qt.Key_Return) && ctrl) send_text_message()
+				}
+
+				Keys.onReleased: {
+					if (event.key === Qt.Key_Control) ctrl = false
+				}
 			}
 		}
 
@@ -116,15 +135,26 @@ BorderedRectangle {
 			spacing: 4
 
 			ToolButtonIcon {
+				tiptext: "send message"
+				visible: !!msg_field.text
+				source: Svg.fromString([
+					'<svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">',
+					'<path d="M17.8563 2.14857C17.4396 1.72274 16.8229 1.56524 16.2479 1.73191L2.8396 5.60607C2.23293 5.77441 1.80293 6.25524 1.6871 6.86524C1.56876 7.48691 1.9821 8.27691 2.5221 8.60691L6.7146 11.1669C7.1446 11.4302 7.6996 11.3644 8.05543 11.0077L12.8563 6.20691C13.0979 5.95607 13.4979 5.95607 13.7396 6.20691C13.9813 6.44774 13.9813 6.84024 13.7396 7.09024L8.93043 11.8911C8.57377 12.2477 8.5071 12.8011 8.7696 13.2319L11.3313 17.4402C11.6313 17.9394 12.1479 18.2236 12.7146 18.2236C12.7813 18.2236 12.8563 18.2236 12.9229 18.2144C13.5729 18.1319 14.0896 17.6894 14.2813 17.0644L18.2563 3.75691C18.4313 3.19024 18.2729 2.57357 17.8563 2.14857" fill="#695EE7"/>',
+					'<path opacity="0.4" fill-rule="evenodd" clip-rule="evenodd" d="M2.50882 14.0065C2.34882 14.0065 2.18882 13.9457 2.06716 13.8232C1.82299 13.579 1.82299 13.184 2.06716 12.9398L3.20466 11.8015C3.44883 11.5582 3.84466 11.5582 4.08883 11.8015C4.33216 12.0457 4.33216 12.4415 4.08883 12.6857L2.95049 13.8232C2.82883 13.9457 2.66882 14.0065 2.50882 14.0065ZM5.64315 15.0002C5.48315 15.0002 5.32315 14.9393 5.20149 14.8168C4.95732 14.5727 4.95732 14.1777 5.20149 13.9335L6.33899 12.7952C6.58315 12.5518 6.97899 12.5518 7.22315 12.7952C7.46649 13.0393 7.46649 13.4352 7.22315 13.6793L6.08482 14.8168C5.96315 14.9393 5.80315 15.0002 5.64315 15.0002ZM5.85457 17.9735C5.97624 18.096 6.13624 18.1568 6.29624 18.1568C6.45624 18.1568 6.61624 18.096 6.7379 17.9735L7.87624 16.836C8.11957 16.5918 8.11957 16.196 7.87624 15.9518C7.63207 15.7085 7.23624 15.7085 6.99207 15.9518L5.85457 17.0902C5.6104 17.3343 5.6104 17.7293 5.85457 17.9735Z" fill="#695EE7"/>',
+					'</svg>'
+				])
+				onClicked: send_text_message()
+			}
+
+			ToolButtonIcon {
 				source: Svg.fromString([
 					'<svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">',
 					'<path opacity="0.4" d="M16.2762 8.18806C15.8305 8.18806 15.4689 8.54442 15.4689 8.98527C15.4689 11.9628 13.0156 14.3856 10.0005 14.3856C6.98455 14.3856 4.53128 11.9628 4.53128 8.98527C4.53128 8.54442 4.16962 8.18806 3.72401 8.18806C3.2784 8.18806 2.91675 8.54442 2.91675 8.98527C2.91675 12.5727 5.66629 15.5343 9.19322 15.9321V17.5361C9.19322 17.9762 9.55407 18.3333 10.0005 18.3333C10.4461 18.3333 10.8077 17.9762 10.8077 17.5361V15.9321C14.3339 15.5343 17.0834 12.5727 17.0834 8.98527C17.0834 8.54442 16.7218 8.18806 16.2762 8.18806Z" fill="#695EE7"/>',
 					'<path d="M9.85377 12.6809H10.146C12.148 12.6809 13.7722 11.0777 13.7722 9.10064V5.24773C13.7722 3.26906 12.148 1.66667 10.146 1.66667H9.85377C7.85175 1.66667 6.22754 3.26906 6.22754 5.24773V9.10064C6.22754 11.0777 7.85175 12.6809 9.85377 12.6809Z" fill="#695EE7"/>',
 					'</svg>'
-
 				])
-				onClicked: root.start_recording()
 				tiptext: "record voice note"
+				onClicked: root.start_recording()
 			}
 
 			ToolButtonIcon {
@@ -138,6 +168,7 @@ BorderedRectangle {
 				onClicked: file_dialog.open()
 				tiptext: "select a file"
 			}
+
 		}
 	}
 
@@ -231,8 +262,9 @@ BorderedRectangle {
 
 	StickerBox{
 		id: sb
-		y: -height-5
-		x: 5
+		y: application.minimal ? 0 : -height-5
+		x: application.minimal ? 0 : 5
+		parent: application.minimal ? Overlay.overlay : root
 	}
 
 	states: [
@@ -290,6 +322,6 @@ BorderedRectangle {
 
 /*##^##
 Designer {
-	D{i:0;autoSize:true;formeditorZoom:0.75;height:50;width:640}D{i:17}D{i:26;transitionDuration:2000}
+	D{i:0;formeditorZoom:3}D{i:12}D{i:27;transitionDuration:2000}
 }
 ##^##*/

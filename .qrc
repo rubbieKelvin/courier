@@ -107,7 +107,7 @@
         <file>uix/components/controls/TranslucentButton.qml</file>
         <file>uix/components/app/ChatHead.qml</file>
         <file>uix/components/app/ChatFooter.qml</file>
-        <file>uix/chatpage.qml</file>
+        <file>uix/Chat.qml</file>
         <file>uix/components/app/ChatPage.qml</file>
         <file>uix/components/utils/RippleArea.qml</file>
         <file>uix/components/utils/helper.js</file>
@@ -119,11 +119,11 @@
         <file>uix/components/popup/CustomTip.qml</file>
         <file>uix/components/app/ChatBody.qml</file>
         <file>uix/components/widgets/ChatBalloon.qml</file>
-        <file>uix/filepage.qml</file>
         <file>uix/assets/images/logo.png</file>
         <file>uix/assets/images/logo.svg</file>
         <file>uix/components/utils/HelperFunctions.qml</file>
         <file>uix/components/models/ContactModel.qml</file>
         <file>uix/components/models/MessageModel.qml</file>
+        <file>uix/components/utils/ShadowDropEffect.qml</file>
     </qresource>
 </RCC>

@@ -8,8 +8,10 @@ BorderedRectangle{
 	width: 250
 	color: "transparent"
 	rightborder.color: theme.stroke
+	state: application.minimal ? "minimal" : ""
 
 	ScrollView{
+		id: scrollView
 		clip: true
 		anchors.fill: parent
 		ScrollBar.horizontal.policy: ScrollBar.AlwaysOff
@@ -40,10 +42,41 @@ BorderedRectangle{
 			onCurrentIndexChanged: _currentPeerIndex=currentIndex
 		}
 	}
+	states: [
+		State {
+			name: "minimal"
+
+			PropertyChanges {
+				target: root
+				width: 40
+				height: 40
+			}
+		}
+	]
+	transitions: [
+	 Transition {
+		 id: transition
+		 ParallelAnimation {
+			 SequentialAnimation {
+				 PauseAnimation {
+					 duration: 50
+				 }
+
+				 PropertyAnimation {
+					 target: root
+					 property: "width"
+					 duration: 150
+				 }
+			 }
+		 }
+		 to: "*"
+		 from: "*"
+	 }
+ ]
 }
 
 /*##^##
 Designer {
-	D{i:0;autoSize:true;height:480;width:640}
+	D{i:0;autoSize:true;height:480;width:640}D{i:7;transitionDuration:2000}D{i:1}
 }
 ##^##*/

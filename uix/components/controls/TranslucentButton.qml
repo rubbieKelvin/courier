@@ -15,6 +15,7 @@ Button {
 		color: theme.accent_light
 
 		RippleArea{
+			clipRadius: bg.radius
 			anchors.fill: parent
 			color: "#44c8c8c8"
 			onClicked: root.clicked()

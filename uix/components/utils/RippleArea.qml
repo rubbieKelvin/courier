@@ -1,5 +1,6 @@
 import QtQuick 2.15
 import QtQuick.Controls 2.15
+import QtGraphicalEffects 1.13
 
 MouseArea {
 	id: root
@@ -8,6 +9,7 @@ MouseArea {
 
 	property int _click_x: 0
 	property int _click_y: 0
+	property int clipRadius: 0
 	property alias color: overlay_.color
 //	readonly property bool : value
 
@@ -22,9 +24,25 @@ MouseArea {
 	}
 
 	Rectangle{
+		id: ripple_clip
 		anchors.fill: parent
 		clip: true
 		color: "transparent"
+		radius: clipRadius
+		layer.enabled: clipRadius>0
+		layer.effect: OpacityMask {
+			maskSource: Item {
+				width: ripple_clip.width
+				height: ripple_clip.height
+
+				Rectangle {
+					anchors.centerIn: parent
+					width: ripple_clip.width
+					height: ripple_clip.height
+					radius: ripple_clip.radius
+				}
+			}
+		}
 
 		Rectangle{
 			id: overlay_2

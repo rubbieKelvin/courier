@@ -15,17 +15,18 @@ ApplicationWindow {
 	visible: true
 	width: 1000
 	height: 650
+	minimumHeight: 500
+	minimumWidth: 300
 	title: "Courier"
 	font.family: poppins_regular.name
 	font.pixelSize: 12
-	minimumHeight: 520
-	minimumWidth: 740
 	background: Rectangle{
 		color: theme.background
 	}
 
 	property string settingsFileName: "settings.ini"
 	property ContactModel contact_model: ContactModel{}
+	readonly property bool minimal: (application.width < 400)
 
 	// when a peer is clicked on the left side, this value will change
 	// which will then be used to update the chatstack
@@ -107,16 +108,20 @@ ApplicationWindow {
 		spacing: 0
 
 		LeftSection{
-			Layout.preferredWidth: 250
+			Layout.preferredWidth: width
 			Layout.fillHeight: true
 		}
 
-		StackView{
+		StackLayout{
 			id: main_stack
 			Layout.fillHeight: true
 			Layout.fillWidth: true
-			initialItem: "./chatpage.qml"
 			clip: true
+
+			Chat{
+				Layout.fillWidth: true
+				Layout.fillHeight: true
+			}
 		}
 	}
 

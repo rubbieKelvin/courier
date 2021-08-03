@@ -10,34 +10,26 @@ import "../utils/emoji.js" as EmojiJS
 Popup {
 	id: root
 	padding: 0
-	height: c1_.height + 10
-	width: c1_.width
 	closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutside
+	clip: application.minimal
 	background: Rectangle{
 		radius: 5
 		color: theme.background
 		border.width: 1
 		border.color: theme.stroke
-		layer.enabled: true
-		layer.effect: DropShadow{
-			verticalOffset: 0
-			horizontalOffset: 0
-			color: theme.darkmode ? "#55000000" : "#22695EE7"
-			radius: 10
-			samples: 8
-			spread: 0
-		}
+		layer.enabled: !application.minimal
+		layer.effect: ShadowDropEffect{}
 
 		Rectangle{
 			width: parent.width
-			height: 20
+			height: 100
 			color: theme.secondary
 			radius: 5
 		}
 	}
 	enter: Transition {
-		NumberAnimation{property: "height"; duration: 100; from: 0; to: c1_.height + 10}
-		NumberAnimation{property: "width"; from: 0; to: c1_.width; duration: 60}
+		NumberAnimation{property: "height"; duration: 100; from: 0; to: application.minimal ? application.height : c1_.height + 10}
+		NumberAnimation{property: "width"; from: 0; to: application.minimal ? application.width : c1_.width; duration: 60}
 	}
 
 	exit: Transition {
@@ -64,8 +56,8 @@ Popup {
 
 	ColumnLayout{
 		id: c1_
-		width: 300
-		height: 320
+		width: application.minimal ? parent.width : 300
+		height: application.minimal ? parent.height : 320
 		spacing: 0
 		y: 5
 
@@ -148,6 +140,13 @@ Popup {
 					}
 				}
 			}
+		}
+	}
+
+	Connections{
+		target: application
+		function onMinimalChanged() {
+			root.close()
 		}
 	}
 }

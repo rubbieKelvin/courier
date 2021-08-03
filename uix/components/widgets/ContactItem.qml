@@ -9,6 +9,7 @@ Rectangle{
 	id: root
 	color: "transparent"
 	height: 60
+	state: application.minimal ? "minimal" : ""
 
 	property alias name: contact_name.text
 	property alias tip: tip.text
@@ -55,6 +56,7 @@ Rectangle{
 	}
 
 	RowLayout{
+		id: rowLayout
 		anchors.fill: parent
 		anchors.leftMargin: 10
 		anchors.rightMargin: 10
@@ -63,6 +65,7 @@ Rectangle{
 		clip: true
 
 		RoundImage{
+			id: roundImage
 			sourceSize.width: 40
 			sourceSize.height: 40
 			width: 40
@@ -72,6 +75,7 @@ Rectangle{
 		}
 
 		Column{
+			visible: !minimal
 			spacing: 4
 			Layout.fillHeight: false
 			Layout.fillWidth: true
@@ -96,6 +100,7 @@ Rectangle{
 			height: 14
 			color: "#f27d7d"
 			radius: 5
+			visible: !minimal
 
 			Label{
 				id: badge_text
@@ -106,10 +111,142 @@ Rectangle{
 			}
 		}
 	}
+	states: [
+		State {
+			name: "minimal"
+
+			PropertyChanges {
+			 target: roundImage
+			 width: 30
+			 height: 30
+			 sourceSize.height: 30
+			 sourceSize.width: 30
+			}
+
+			PropertyChanges {
+				target: rowLayout
+				anchors.bottomMargin: 5
+				anchors.topMargin: 5
+				anchors.rightMargin: 5
+				anchors.leftMargin: 5
+			}
+
+			PropertyChanges {
+			   target: root
+			   height: 40
+			}
+		}
+ ]
+ transitions: [
+	 Transition {
+		 id: transition
+		 ParallelAnimation {
+			 SequentialAnimation {
+				 PauseAnimation {
+					 duration: 50
+				 }
+
+				 PropertyAnimation {
+					 target: roundImage
+					 property: "width"
+					 duration: 150
+				 }
+			 }
+
+			 SequentialAnimation {
+				 PauseAnimation {
+					 duration: 50
+				 }
+
+				 PropertyAnimation {
+					 target: roundImage
+					 property: "sourceSize.width"
+					 duration: 150
+				 }
+			 }
+
+			 SequentialAnimation {
+				 PauseAnimation {
+					 duration: 50
+				 }
+
+				 PropertyAnimation {
+					 target: roundImage
+					 property: "height"
+					 duration: 150
+				 }
+			 }
+
+			 SequentialAnimation {
+				 PauseAnimation {
+					 duration: 50
+				 }
+
+				 PropertyAnimation {
+					 target: roundImage
+					 property: "sourceSize.height"
+					 duration: 150
+				 }
+			 }
+		 }
+
+		 ParallelAnimation {
+			 SequentialAnimation {
+				 PauseAnimation {
+					 duration: 50
+				 }
+
+				 PropertyAnimation {
+					 target: rowLayout
+					 property: "anchors.leftMargin"
+					 duration: 150
+				 }
+			 }
+
+			 SequentialAnimation {
+				 PauseAnimation {
+					 duration: 50
+				 }
+
+				 PropertyAnimation {
+					 target: rowLayout
+					 property: "anchors.bottomMargin"
+					 duration: 150
+				 }
+			 }
+
+			 SequentialAnimation {
+				 PauseAnimation {
+					 duration: 50
+				 }
+
+				 PropertyAnimation {
+					 target: rowLayout
+					 property: "anchors.topMargin"
+					 duration: 150
+				 }
+			 }
+
+			 SequentialAnimation {
+				 PauseAnimation {
+					 duration: 50
+				 }
+
+				 PropertyAnimation {
+					 target: rowLayout
+					 property: "anchors.rightMargin"
+					 duration: 150
+				 }
+			 }
+		 }
+		 to: "*"
+		 from: "*"
+	 }
+ ]
 }
 
 /*##^##
 Designer {
-	D{i:0;formeditorZoom:2;width:300}
+	D{i:0;formeditorZoom:2;width:300}D{i:14;transitionDuration:2000}
 }
 ##^##*/

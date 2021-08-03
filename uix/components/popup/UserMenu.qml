@@ -13,7 +13,6 @@ import "../utils/constants.js" as Constants
 
 Popup {
 	id: root
-	height: c1_.height + 10
 	margins: 0
 	padding: 0
 	closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutsideParent
@@ -22,7 +21,7 @@ Popup {
 		color: theme.background
 		border.width: 1
 		border.color: theme.stroke
-		layer.enabled: true
+		layer.enabled: !application.minimal
 		layer.effect: DropShadow{
 			verticalOffset: 0
 			horizontalOffset: 0
@@ -34,14 +33,14 @@ Popup {
 
 		Rectangle{
 			width: parent.width
-			height: 20
+			height: 100
 			color: theme.secondary
 			radius: 5
 		}
 	}
 	enter: Transition {
-		NumberAnimation{property: "height"; duration: 100; from: 0; to: c1_.height + 10}
-		NumberAnimation{property: "width"; from: 0; to: 250; duration: 60}
+		NumberAnimation{property: "height"; duration: 100; from: 0; to: application.minimal ? application.height : c1_.height + 10}
+		NumberAnimation{property: "width"; from: 0; to: application.minimal ? application.width : 250; duration: 60}
 	}
 	exit: Transition {
 		NumberAnimation{property: "height"; duration: 60; from: root.height; to: 0}
@@ -61,7 +60,7 @@ Popup {
 
 	ColumnLayout{
 		id: c1_
-		width: 250
+		width: application.minimal ? application.width : 250
 		spacing: 0
 		y: 5
 
@@ -593,6 +592,13 @@ Popup {
 			// set photo
 			// TODO: use a worker script to stop gui freeze on large images
 			helper.profilephoto = file
+		}
+	}
+
+	Connections{
+		target: application
+		function onMinimalChanged() {
+			root.close()
 		}
 	}
 }

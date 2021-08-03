@@ -18,9 +18,13 @@ Rectangle {
 			clip: true
 			spacing: 8
 
-			onCountChanged: {
-				currentIndex = count -1
-			}
+			onCountChanged: currentIndex = count-1
 		}
 	}
 }
+
+/*##^##
+Designer {
+	D{i:0;autoSize:true;formeditorZoom:0.9;height:480;width:640}
+}
+##^##*/

@@ -15,15 +15,18 @@ Rectangle {
 
 	signal clicked
 
-	Image {
-		id: image
-		anchors.centerIn: parent
-	}
 
 	RippleArea{
 		id: mouse
 		anchors.fill: parent
+		color: theme.secondary
+		clipRadius: root.radius
 		onClicked: root.clicked()
+	}
+
+	Image {
+		id: image
+		anchors.centerIn: parent
 	}
 
 	CustomTip{
