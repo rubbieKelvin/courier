@@ -28,6 +28,7 @@ BorderedRectangle{
 				name: username.trim()
 				tip: `You can now chat with ${username.trim()}`
 				subtext: Helper.truncate(`You can now chat with ${username.trim()}`, 30)
+				icon: avatar || "../../assets/images/unknown.svg"
 
 				onClicked: {
 					const i = list.indexAt(x, y)

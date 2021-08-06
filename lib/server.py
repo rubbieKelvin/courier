@@ -20,8 +20,10 @@ from .queue import MessageQueue
 from .messages import INTENT_HANDSHAKE
 from .messages import INTENT_PROFILE_UPDATE
 from .messages import INTENT_PRIVATE_MESSAGE
+from .messages import INTENT_PROFILE_PHOTO_UPDATE
 
 from .messages import Json
+from .messages import JsonBinary
 from .messages import AuthStatusMessage
 from .messages import ClientDataMessage
 from .messages import ConnectedClientsMessage
@@ -32,10 +34,18 @@ class CourierClientDummy:
 	"""used to hold all data about the virtual client...
 	including client object"""
 
+	# using this to reduce time complexity when searching for client dummy
+	# with client:QWebSocket object. 
+	MAP = dict()
+
 	def __init__(self, client: QWebSocket, username: str, uid: str) -> None:
 		self.client = client
 		self.uid = uid
 		self.username = username
+		self.photo = "" # profile_photo will be saved as base64 text
+		
+		# ...
+		CourierClientDummy.MAP[self.client] = self
 
 	def to_dict(self) -> dict:
 		return dict(
@@ -170,7 +180,6 @@ class CourierServer(QWebSocketServer):
 
 		client.disconnected.connect(self.on_client_disconnected)
 		client.textMessageReceived.connect(self.on_text_received)
-		# noinspection PyUnresolvedReferences
 		client.binaryMessageReceived.connect(self.on_binary_received)
 
 	def on_connection_closed(self):
@@ -204,20 +213,23 @@ class CourierServer(QWebSocketServer):
 			logger.warn("message with unregistered intent:", message)
 
 	def on_binary_received(self, data: QByteArray):
-		# client: QWebSocket = self.sender()
-		# client_dummy = self.get_client_dummy_from_qwebsocket_object(client)
+		client: QWebSocket = self.sender()
+		dummy = self.get_dummy(client)
 
-		# binary: Binary = Binary.fromQByteArray(data)
-		# binary.sign(client_dummy.unique_id)
+		message = JsonBinary.from_qbytearray(data)
+		intent = message.get('intent')
 
-		# receiver_uid = binary.body.get("receiver_uid")
-		# receiver: QWebSocket
-		# for dummy in self.clients:
-		# 	if dummy.unique_id == receiver_uid:
-		# 		receiver = dummy.client
-		# 		self.sendBinaryMessage(receiver, binary.toQByteArray())
-		# 		return
-		pass
+		if intent == INTENT_PROFILE_PHOTO_UPDATE:
+			self.handle_profile_photo_update(client, message)
+		else:
+			logger.warn("got binrary with unregistered intent:", message)
+
+	def handle_profile_photo_update(self, client: QWebSocket, message: JsonBinary):
+		# ...
+		# update client profile pic every where
+		for dummy in self.clients:
+			if not (dummy.client == client):
+				self.sendBinaryMessage(dummy.client, message.to_qbytearray())
 
 	def handle_handshake_intent(self, client: QWebSocket, message: Json):
 		"""
@@ -238,7 +250,7 @@ class CourierServer(QWebSocketServer):
 		""" whenever a client updates it's profile, this method id called.
 		with message containing 'profile' key which holds the updated profile.
 		"""
-		dummy = self.get_client_dummy_from_qwebsocket_object(client)
+		dummy = self.get_dummy(client)
 		profile: dict = message.get('profile')
 
 		if profile.get("username"):
@@ -251,15 +263,15 @@ class CourierServer(QWebSocketServer):
 				self.sendTextMessage(other_dummy.client, str(new_message))
 
 	# noinspection SpellCheckingInspection
-	def get_client_dummy_from_qwebsocket_object(self, client: QWebSocket) -> CourierClientDummy:
+	def get_dummy(self, client: QWebSocket) -> CourierClientDummy:
 		"""finds the dummy assoiciated with client"""
-		return list(filter(lambda d: d.client == client, self.clients))[0]
+		return CourierClientDummy.MAP[client]
 
 	def handle_private_message(self, client: QWebSocket, message: Json):
 		""" this function is called when a private text is recieved.
 		the text is sent to the client who's dummy has the matching uid. 
 		"""
-		dummy = self.get_client_dummy_from_qwebsocket_object(client)
+		dummy = self.get_dummy(client)
 		txt_message: dict = message.get('message', {})
 
 		# # send to receiver
@@ -277,6 +289,7 @@ class CourierServer(QWebSocketServer):
 		for dummy in self.clients:
 			dummy.client.close(QWebSocketProtocol.CloseCodeGoingAway, "server shutdown")
 		self.clients.clear()
+		CourierClientDummy.MAP = dict()
 		self.close()
 
 # TODO: onclient disconnect, remove client from clients list

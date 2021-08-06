@@ -14,6 +14,7 @@ Rectangle{
 	property alias name: contact_name.text
 	property alias tip: tip.text
 	property alias subtext: contact_description.text
+	property alias icon: roundImage.source
 
 	signal clicked()
 
@@ -68,10 +69,10 @@ Rectangle{
 			id: roundImage
 			sourceSize.width: 40
 			sourceSize.height: 40
-			width: 40
-			height: 40
+			Layout.preferredWidth: 40
+			Layout.preferredHeight: 40
 			radius: width/2
-			source: "../../assets/avatars/001-man.svg"
+			fillMode: Image.PreserveAspectCrop
 		}
 
 		Column{

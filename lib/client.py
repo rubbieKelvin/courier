@@ -26,10 +26,13 @@ from .messages import INTENT_HANDSHAKE
 from .messages import INTENT_PROFILE_UPDATE
 from .messages import INTENT_PRIVATE_MESSAGE
 from .messages import INTENT_CONTACT_LIST_REQUEST
+from .messages import INTENT_PROFILE_PHOTO_UPDATE
 
+from .paths import Path
 from .queue import MessageQueue
 
 from .messages import Json
+from .messages import JsonBinary
 from .messages import ClientHandShakeMessage
 from .messages import ClientPrivateTextMessage
 from .messages import ClientProfileUpdateMessage
@@ -107,6 +110,7 @@ class CourierClient(QWebSocket):
 	privateMessageReceived = Signal("QVariant")
 	clientProfileUpdateReceived = Signal("QVariant")
 	handshakeDone = Signal(bool)
+	peerUpdatedProfilePic = Signal("QVariant")
 
 	def handleQueue(self):
 		"""
@@ -236,15 +240,33 @@ class CourierClient(QWebSocket):
 
 	# noinspection PyMethodMayBeStatic
 	def on_binary_received(self, data: QByteArray):
-		# logger.log("received binaries!")
-		# binary: Binary = Binary.fromQByteArray(data)
+		message = JsonBinary.from_qbytearray(data)
+		intent: str = message.get('intent')
 
-		# # this will save the binary as file and feed the file path instead
-		# binary_dict: dict = binary.toDict()
+		if intent == INTENT_PROFILE_PHOTO_UPDATE:
+			self.handle_profile_pic_update(message)
+		
+		else:
+			logger.warn("recvd binary with unregistered intent:", message)
 
-		# # noinspection PyUnresolvedReferences
-		# self.binaryReceived.emit(binary_dict)
-		pass
+	def handle_profile_pic_update(self, message: JsonBinary):
+		"""this is a client's profile pic.
+		save the binary to file, and then send a signal with the file name
+		"""
+		path = Path()
+		payload = message._payload
+		filename = uuid4().__str__()[:10]+message.get('extension', '.img')
+		filepath = os.path.join(path.PROFILE_PHOTO_ROOT, filename)
+
+		file = QFile(filepath)
+		if file.open(QIODevice.WriteOnly):
+			file.write(payload)
+
+			url = QUrl.fromLocalFile(filepath)
+			self.peerUpdatedProfilePic.emit({
+				'uid': message.get('client_uid'),
+				'url': url.toString()
+			})
 
 	def handle_handshake(self, message: Json):
 		# we'll get a successful=true message if authentication is successful.

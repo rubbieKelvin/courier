@@ -14,7 +14,7 @@ ListModel{
 				  only to be used in model.
 				*/
 				peer._id = -1
-				peer.avatar = ''
+				peer.avatar = peer.avatar || ''
 				peer.last_interaction = new Date().toJSON()
 			}
 
@@ -69,6 +69,16 @@ ListModel{
 				const i = con1.hasPeerWithUID(uid)
 				if (i!==null){
 					root.set(i, profile)
+				}
+			}
+
+			function onPeerUpdatedProfilePic(data){
+				const uid = data.uid
+				const url = data.url
+
+				const i = con1.hasPeerWithUID(uid)
+				if (i!==null){
+					root.set(i, {avatar: url})
 				}
 			}
 		}

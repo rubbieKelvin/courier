@@ -13,20 +13,10 @@ from PySide2 import QtGui
 
 # lib
 from lib import db
+from lib.paths import Path
 from lib.helper import Helper
 from lib.server import CourierServer
 from lib.client import CourierClient
-
-
-def prepareApplicationFolders(root_: str, tree: dict):
-	for key, value in tree.items():
-		directory = os.path.join(root_, key)
-
-		if not os.path.exists(directory):
-			os.mkdir(directory)
-
-		if type(value) is dict:
-			prepareApplicationFolders(directory, value)
 
 
 # resolve Warning: Ignoring XDG_SESSION_TYPE=wayland on Gnome. Use QT_QPA_PLATFORM=wayland to run on Wayland anyway.
@@ -43,35 +33,11 @@ if __name__ == "__main__":
 	app.setOrganizationName("stuffsbyrubbie")
 	app.setOrganizationDomain("com.stuffsbyrubbie.courier")
 
-	root = QtCore.QStandardPaths.writableLocation(QtCore.QStandardPaths.AppDataLocation)
-
-	# create root is not available
-	if not os.path.exists(root):
-		# create top level if not exist
-		toplevel_dir = os.path.split(root)[0]
-		if not os.path.exists(toplevel_dir):
-			if not QtCore.QDir().mkdir(toplevel_dir):
-				sys.exit("could'nt create application toplevel root")
-		if not QtCore.QDir().mkdir(root):
-			sys.exit("could'nt create application data root")
-
-	# create application directory
-	prepareApplicationFolders(root,	
-		dict(
-			files=dict(
-				sent=None,
-				recieved=None
-			),
-			user=dict(
-				profile_photo=None
-			),
-			database=None,
-		))
+	# initialize path
+	path = Path()
 
 	# initialze
-	if not db.init(os.path.join(
-		root, "database"
-	)):
+	if not db.init(path.DATABASE_DIR):
 		sys.exit("couldn't initialize database.")
 	
 	# Q OBJECT
@@ -80,7 +46,7 @@ if __name__ == "__main__":
 	helper = Helper(
 		server=server,
 		client=client,
-		dataroot=os.path.join(root, "user", ".appdat"))
+		dataroot=path.DATAROOT_FILE)
 
 	# load libs & models
 	engine.rootContext().setContextProperty("helper", helper)

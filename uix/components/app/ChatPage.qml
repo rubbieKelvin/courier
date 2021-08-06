@@ -12,6 +12,7 @@ Page {
 
 	property string client_uid
 	property string client_username
+	property string client_avatar
 
 	readonly property MessageModel model: MessageModel{
 		client_uid: current_chat_page.client_uid
@@ -26,6 +27,7 @@ Page {
 			Layout.preferredHeight: 40
 			uid: client_uid
 			username: client_username
+			avatar: client_avatar
 		}
 
 		ChatBody{

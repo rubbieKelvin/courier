@@ -5,76 +5,6 @@
         <file>uix/components/app/AppHeader.qml</file>
         <file>uix/components/controls/ToolButtonIcon.qml</file>
         <file>uix/components/utils/svg.js</file>
-        <file>uix/assets/avatars/001-man.svg</file>
-        <file>uix/assets/avatars/002-girl.svg</file>
-        <file>uix/assets/avatars/003-boy.svg</file>
-        <file>uix/assets/avatars/004-woman.svg</file>
-        <file>uix/assets/avatars/005-man-1.svg</file>
-        <file>uix/assets/avatars/006-woman-1.svg</file>
-        <file>uix/assets/avatars/007-boy-1.svg</file>
-        <file>uix/assets/avatars/008-clown.svg</file>
-        <file>uix/assets/avatars/009-firefighter.svg</file>
-        <file>uix/assets/avatars/010-girl-1.svg</file>
-        <file>uix/assets/avatars/011-man-2.svg</file>
-        <file>uix/assets/avatars/012-woman-2.svg</file>
-        <file>uix/assets/avatars/013-woman-3.svg</file>
-        <file>uix/assets/avatars/014-man-3.svg</file>
-        <file>uix/assets/avatars/015-woman-4.svg</file>
-        <file>uix/assets/avatars/016-boy-2.svg</file>
-        <file>uix/assets/avatars/017-girl-2.svg</file>
-        <file>uix/assets/avatars/018-boy-3.svg</file>
-        <file>uix/assets/avatars/019-woman-5.svg</file>
-        <file>uix/assets/avatars/020-man-4.svg</file>
-        <file>uix/assets/avatars/021-girl-3.svg</file>
-        <file>uix/assets/avatars/022-man-5.svg</file>
-        <file>uix/assets/avatars/023-man-6.svg</file>
-        <file>uix/assets/avatars/024-woman-6.svg</file>
-        <file>uix/assets/avatars/025-boy-4.svg</file>
-        <file>uix/assets/avatars/026-girl-4.svg</file>
-        <file>uix/assets/avatars/027-man-7.svg</file>
-        <file>uix/assets/avatars/028-woman-7.svg</file>
-        <file>uix/assets/avatars/029-man-8.svg</file>
-        <file>uix/assets/avatars/030-policewoman.svg</file>
-        <file>uix/assets/avatars/031-policeman.svg</file>
-        <file>uix/assets/avatars/032-girl-5.svg</file>
-        <file>uix/assets/avatars/033-superhero.svg</file>
-        <file>uix/assets/avatars/034-woman-8.svg</file>
-        <file>uix/assets/avatars/035-woman-9.svg</file>
-        <file>uix/assets/avatars/036-man-9.svg</file>
-        <file>uix/assets/avatars/037-arab-woman.svg</file>
-        <file>uix/assets/avatars/038-man-10.svg</file>
-        <file>uix/assets/avatars/039-woman-10.svg</file>
-        <file>uix/assets/avatars/040-man-11.svg</file>
-        <file>uix/assets/avatars/041-woman-11.svg</file>
-        <file>uix/assets/avatars/042-vampire.svg</file>
-        <file>uix/assets/avatars/043-chef.svg</file>
-        <file>uix/assets/avatars/044-farmer.svg</file>
-        <file>uix/assets/avatars/045-man-12.svg</file>
-        <file>uix/assets/avatars/046-woman-12.svg</file>
-        <file>uix/assets/avatars/047-man-13.svg</file>
-        <file>uix/assets/avatars/048-boy-5.svg</file>
-        <file>uix/assets/avatars/049-thief.svg</file>
-        <file>uix/assets/avatars/050-catwoman.svg</file>
-        <file>uix/assets/avatars/051-american-football-player.svg</file>
-        <file>uix/assets/avatars/052-witch.svg</file>
-        <file>uix/assets/avatars/053-concierge.svg</file>
-        <file>uix/assets/avatars/054-woman-13.svg</file>
-        <file>uix/assets/avatars/055-bodybuilder.svg</file>
-        <file>uix/assets/avatars/056-girl-6.svg</file>
-        <file>uix/assets/avatars/057-woman-14.svg</file>
-        <file>uix/assets/avatars/058-death.svg</file>
-        <file>uix/assets/avatars/059-doctor.svg</file>
-        <file>uix/assets/avatars/060-doctor-1.svg</file>
-        <file>uix/assets/avatars/061-nun.svg</file>
-        <file>uix/assets/avatars/062-builder.svg</file>
-        <file>uix/assets/avatars/063-girl-7.svg</file>
-        <file>uix/assets/avatars/064-punk.svg</file>
-        <file>uix/assets/avatars/065-pinup.svg</file>
-        <file>uix/assets/avatars/066-boy-6.svg</file>
-        <file>uix/assets/avatars/067-man-14.svg</file>
-        <file>uix/assets/avatars/068-girl-8.svg</file>
-        <file>uix/assets/avatars/069-woman-15.svg</file>
-        <file>uix/assets/avatars/070-man-15.svg</file>
         <file>uix/assets/fonts/Poppins/OFL.txt</file>
         <file>uix/assets/fonts/Poppins/Poppins-Black.ttf</file>
         <file>uix/assets/fonts/Poppins/Poppins-BlackItalic.ttf</file>
@@ -125,5 +55,6 @@
         <file>uix/components/models/ContactModel.qml</file>
         <file>uix/components/models/MessageModel.qml</file>
         <file>uix/components/utils/ShadowDropEffect.qml</file>
+        <file>uix/assets/images/unknown.svg</file>
     </qresource>
 </RCC>

@@ -24,6 +24,7 @@ Page {
 				Layout.fillWidth: true
 				Layout.fillHeight: true
 				client_username: username
+				client_avatar: avatar || ''
 			}
 		}
 	}

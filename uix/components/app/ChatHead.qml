@@ -11,6 +11,7 @@ Rectangle {
 
 	property string uid
 	property string username
+	property string avatar
 
 	RowLayout{
 		anchors.fill: parent
@@ -21,10 +22,11 @@ Rectangle {
 		RoundImage{
 			sourceSize.width: 28
 			sourceSize.height: 28
-			width: 28
-			height: 28
+			Layout.preferredWidth: 28
+			Layout.preferredHeight: 28
 			radius: width/2
-			source: "../../assets/avatars/001-man.svg"
+			source: avatar || "../../assets/images/unknown.svg"
+			fillMode: Image.PreserveAspectCrop
 		}
 
 		Label{

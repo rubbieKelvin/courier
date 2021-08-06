@@ -16,12 +16,15 @@ from PySide2.QtGui import QClipboard
 from PySide2.QtCore import QStandardPaths
 from PySide2.QtWebSockets import QWebSocketProtocol
 # ...
+from .paths import Path
 from .server import CourierServer
 from .client import CourierClient
+from .messages import ClientProfilePhotoBinary
 
 from . import logger
 from . import username
 from .db import Person
+from . import getUniqueId
 
 class Helper(QObject):
 	def __init__(self,
@@ -50,7 +53,9 @@ class Helper(QObject):
 					pass
 
 		# ...
-		self._photo = QUrl.fromLocalFile(self.getItemData("profile_photo")).toString() or QUrl("qrc:/uix/assets/avatars/001-man.svg").toString()
+		self._photo = \
+			QUrl.fromLocalFile(self.getItemData("profile_photo")).toString() or \
+				QUrl("qrc:/uix/assets/images/unknown.svg").toString()
 
 		# whenever server starts running,
 		# connect client to server.
@@ -62,6 +67,7 @@ class Helper(QObject):
 		self.client.contactListReceived.connect(self.handle_client_list)
 		self.client.newPeerJoined.connect(self.handle_client_data)
 		self.client.clientProfileUpdateReceived.connect(self.handle_client_profile_update)
+		self.client.peerUpdatedProfilePic.connect(self.save_avatar_to_db)
 
 	usernameChanged = Signal(str)
 	profilePhotoChanged = Signal(str)
@@ -155,6 +161,11 @@ class Helper(QObject):
 			if not person.update(data.get('uid'), **profile):
 				logger.error(person.query.lastError())
 
+	def save_avatar_to_db(self, data: dict):
+		person = Person()
+		if not person.update(data.get('uid'), avatar=data.get('url')):
+			logger.error(person.query.lastError())
+
 	@Slot(result="QVariantList")
 	def peersList(self) -> list:
 		person = Person()
@@ -179,26 +190,33 @@ class Helper(QObject):
 	def saveTextToClipboard(self, text: str):
 		QClipboard().setText(text)
 
-
-	def set_photo(self, file: str):
-		# load image
-		image = QImage(QUrl(file).toLocalFile())
-
+	@staticmethod
+	def scale_profile_image(image: QImage) -> QImage:
 		# scale image 1:1
 		# image size should be 300x300 or min(height, width)
 		square = min(300, min(image.height(), image.width()))
-		image = image.scaled(square, square, Qt.KeepAspectRatioByExpanding)
+		return image.scaled(square, square, Qt.KeepAspectRatioByExpanding)
+
+	def set_photo(self, file: str):
+		path = Path()
+
+		# load image
+		image = QImage(QUrl(file).toLocalFile())
+		image = Helper.scale_profile_image(image)
 
 		# now save image in new file
-		new_file = os.path.join(
-			QStandardPaths.writableLocation(QStandardPaths.AppDataLocation),
-			"user", "profile_photo", f"photo-{uuid4()}.png")
+		new_file = os.path.join(path.PROFILE_PHOTO_ROOT, f"photo-{uuid4().__str__()[:10]}.png")
 		image.save(new_file)
 
 		# set and emit
 		self.setItemData({"profile_photo": new_file})
-		self._photo = QUrl.fromLocalFile(new_file).toString()
+		url = QUrl.fromLocalFile(new_file)
+		self._photo = url.toString()
 		self.profilePhotoChanged.emit(self._photo)
+
+		# share
+		message = ClientProfilePhotoBinary(filename=url, client_uid=getUniqueId())
+		self.client.sendBinaryMessage(message.to_qbytearray())
 
 	@Property(str, notify=profilePhotoChanged, fset=set_photo)
 	def profilephoto(self) -> str:
