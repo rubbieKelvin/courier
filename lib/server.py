@@ -42,8 +42,11 @@ class CourierClientDummy:
 		self.client = client
 		self.uid = uid
 		self.username = username
-		self.photo = "" # profile_photo will be saved as base64 text
 		
+		# profile photo will be sent
+		# to new connections. it's stored here as a jsonbinary
+		self.photo: JsonBinary = None
+
 		# ...
 		CourierClientDummy.MAP[self.client] = self
 
@@ -159,7 +162,7 @@ class CourierServer(QWebSocketServer):
 		 and then add client to clients set.
 		"""
 
-		# tell client whose has been here
+		# tell clients who has been here
 		if len(self.clients):
 			message = ConnectedClientsMessage(clients=[c.to_dict() for c in self.clients])
 			self.sendTextMessage(client.client, str(message))
@@ -168,7 +171,9 @@ class CourierServer(QWebSocketServer):
 		message = ClientDataMessage(client=client.to_dict())
 		for dummy in self.clients:
 			self.sendTextMessage(dummy.client, str(message))
-		
+			if dummy.photo:
+				self.sendBinaryMessage(dummy.client, dummy.photo.to_qbytearray())
+
 		self.clients.add(client)
 
 	def on_new_connection(self):
@@ -225,7 +230,10 @@ class CourierServer(QWebSocketServer):
 			logger.warn("got binrary with unregistered intent:", message)
 
 	def handle_profile_photo_update(self, client: QWebSocket, message: JsonBinary):
-		# ...
+		# store photo
+		my_dummy = self.get_dummy(client)
+		my_dummy.photo = message
+
 		# update client profile pic every where
 		for dummy in self.clients:
 			if not (dummy.client == client):

@@ -68,6 +68,7 @@ class Helper(QObject):
 		self.client.newPeerJoined.connect(self.handle_client_data)
 		self.client.clientProfileUpdateReceived.connect(self.handle_client_profile_update)
 		self.client.peerUpdatedProfilePic.connect(self.save_avatar_to_db)
+		self.client.handshakeDone.connect(self.handle_client_handshake)
 
 	usernameChanged = Signal(str)
 	profilePhotoChanged = Signal(str)
@@ -90,6 +91,15 @@ class Helper(QObject):
 		""" returns the machine's current ip address
 		"""
 		return socket.gethostbyname(self.hostname())
+
+	def handle_client_handshake(self, status: bool):
+		""" this method is called when handshake status is revcieved
+		"""
+		if status:
+			# send profile photo to server
+			url = QUrl(self._photo)
+			message = ClientProfilePhotoBinary(filename=url, client_uid=getUniqueId())
+			self.client.sendBinaryMessage(message.to_qbytearray())
 
 	def connect_client_to_self(self):
 		""" connects client to server once the server starts running
