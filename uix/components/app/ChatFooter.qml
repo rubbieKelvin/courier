@@ -41,6 +41,11 @@ BorderedRectangle {
 		msg_field.text=""
 	}
 
+	function send_sticker(source){
+		if (source)
+			client.sendPrivateMessage(source, client_uid, true)
+	}
+
 	// base state
 	RowLayout{
 		id: rowLayout
@@ -265,6 +270,10 @@ BorderedRectangle {
 		y: application.minimal ? 0 : -height-5
 		x: application.minimal ? 0 : 5
 		parent: application.minimal ? Overlay.overlay : root
+
+		onEmojiSelected: {
+			root.send_sticker(source)
+		}
 	}
 
 	states: [

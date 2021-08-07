@@ -164,14 +164,16 @@ class CourierClient(QWebSocket):
 		return True
 
 	@Slot(str, str)
-	def sendPrivateMessage(self, text: str, recv_uid: str):
+	@Slot(str, str, bool)
+	def sendPrivateMessage(self, text: str, recv_uid: str, sticker: bool=False):
 		""" send a text message `text` to a client with uid==`recv_uid`.
 		the server will recieve the message and send to the client who the message is assigned to.
 		"""
 		message = ClientPrivateTextMessage(
 			text=text,
 			recv_uid=recv_uid,
-			sender_uid=getUniqueId()
+			sender_uid=getUniqueId(),
+			msg_type=ClientPrivateTextMessage.STICKER_MESSAGE if sticker else ClientPrivateTextMessage.TEXT_MESSAGE
 		)
 		self.sendTextMessage(str(message))
 

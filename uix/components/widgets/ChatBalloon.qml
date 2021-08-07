@@ -1,11 +1,12 @@
 import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
+import "../utils/svg.js" as Svg
 
 RowLayout {
 	id: root
 	property bool showAtLeft: true
-	property alias label: text_
+	property string label: ""
 	property int maxLabelWidth: 400
 
 	Item{
@@ -15,10 +16,12 @@ RowLayout {
 
 	// main stuff
 	ColumnLayout{
+		id: columnLayout
 		spacing: 8
 
 		Label{
 			id: text_
+			text: label
 			color: showAtLeft ? theme.text : "white"
 			font.pixelSize: 10
 			wrapMode: Text.WordWrap
@@ -30,6 +33,23 @@ RowLayout {
 			}
 		}
 
+		Image {
+			id: image
+			visible: false
+			enabled: false
+			sourceSize.width: 120
+			sourceSize.height: 120
+			Layout.preferredWidth: 120
+			Layout.preferredHeight: 120
+			fillMode: Image.PreserveAspectFit
+
+			Component.onCompleted: {
+				if (root.state === "sticker")
+					source = Svg.fromString([label])
+			}
+
+		}
+
 		Label{
 			id: time_text
 			font.pixelSize: 8
@@ -37,15 +57,42 @@ RowLayout {
 			verticalAlignment: Text.AlignVCenter
 			color: theme.disabled
 			text: "00:00am"
-			Layout.preferredWidth: text_.width
+			Layout.preferredWidth: {
+				if (root.state === ""){
+					return text_.width
+				}else if (root.state === "sticker"){
+					return image.width
+				}
+			}
 
 		}
+
 	}
 
 	Item{
 		Layout.fillWidth: showAtLeft
 		Layout.preferredHeight: 5
 	}
+	states: [
+		State {
+			name: "sticker"
+
+   PropertyChanges {
+	   target: text_
+	   width: 0
+	   height: 0
+	   visible: false
+	   enabled: false
+   }
+
+   PropertyChanges {
+	   target: image
+	   visible: true
+	   enabled: true
+	   fillMode: Image.PreserveAspectFit
+   }
+		}
+ ]
 }
 
 /*##^##

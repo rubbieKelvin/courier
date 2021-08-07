@@ -37,6 +37,8 @@ Popup {
 		NumberAnimation{property: "width"; from: root.width; to: 0; duration: 100}
 	}
 
+	signal emojiSelected(string source)
+
 	QtObject{
 		id: tones
 		property int currentIndex: 0
@@ -136,11 +138,23 @@ Popup {
 						tone: tones.currentTone
 						source: EmojiJS.stickers[modelData]
 
-						onClicked: root.close()
+						onClicked: {
+							let emoji = EmojiJS.stickers[modelData]
+							emoji = emoji.replace("$tone", tone)
+							root.emojiSelected(emoji)
+							closer.restart()
+						}
 					}
 				}
 			}
 		}
+	}
+
+	Timer{
+		id: closer
+		interval: 180
+		repeat: false
+		onTriggered: root.close()
 	}
 
 	Connections{
