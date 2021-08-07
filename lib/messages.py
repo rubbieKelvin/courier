@@ -149,12 +149,14 @@ class ClientHandShakeMessage(Json):
 		"""
 		super().__init__(uid=uid, username=username, password=password, intent=INTENT_HANDSHAKE)
 
+
 class AuthStatusMessage(Json):
 	def __init__(self, successful: bool):
 		""" this message is sent to client.
 		used to tell client if authentication was successfull
 		"""
 		super().__init__(successful=successful, intent=INTENT_HANDSHAKE)
+
 
 class ConnectedClientsMessage(Json):
 	def __init__(self, clients: list):
@@ -163,12 +165,14 @@ class ConnectedClientsMessage(Json):
 		"""
 		super().__init__(clients=clients, intent=INTENT_CONTACT_LIST_REQUEST)
 
+
 class ClientDataMessage(Json):
 	def __init__(self, client: dict) -> None:
 		"""
 		used to send client data to other clients
 		"""
 		super().__init__(client=client, intent=INTENT_NEW_PEER)
+
 
 class ClientProfileUpdateMessage(Json):
 	def __init__(self, username:str=None) -> None:
@@ -182,6 +186,7 @@ class ClientProfileUpdateMessage(Json):
 
 		super().__init__(profile=profile, intent=INTENT_PROFILE_UPDATE)
 
+
 class ClientProfileUpdateWithUidMessage(Json):
 	def __init__(self, uid:str, profile: Json) -> None:
 		""" The server uses this to broadcast to other clients, the updated client's profile.
@@ -191,15 +196,19 @@ class ClientProfileUpdateWithUidMessage(Json):
 		profile.data['uid'] = uid
 		super().__init__(**profile.to_dict())
 
+
 class ClientPrivateTextMessage(Json):
-	def __init__(self, text:str, recv_uid: str, sender_uid: str, sticker_id:int=None) -> None:
+	TEXT_MESSAGE = 0
+	STICKER_MESSAGE = 1
+
+	def __init__(self, text:str, recv_uid: str, sender_uid: str, msg_type:int=0) -> None:
 		super().__init__(
 			intent=INTENT_PRIVATE_MESSAGE,
 			message=dict(
 				text=text,
 				recv_uid=recv_uid,
 				sender_uid=sender_uid,
-				sticker_id=sticker_id,
+				msg_type=msg_type,
 				uid=uuid.uuid4().__str__(),
 				timestamp=QDateTime.currentDateTime().toString()
 			))
@@ -212,7 +221,7 @@ class ClientProfilePhotoBinary(JsonBinary):
 		file = QFile(filename)
 
 		if not (file.exists() and file.open(QIODevice.ReadOnly)):
-			raise FileNotFoundError
+			raise FileNotFoundError(f'File "{filename}" does not exist')
 
 		super().__init__(file.readAll(), client_uid=client_uid, extension=extension, intent=INTENT_PROFILE_PHOTO_UPDATE)
 

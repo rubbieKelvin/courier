@@ -53,9 +53,10 @@ class Helper(QObject):
 					pass
 
 		# ...
-		self._photo = \
-			QUrl.fromLocalFile(self.getItemData("profile_photo")).toString() or \
-				QUrl("qrc:/uix/assets/images/unknown.svg").toString()
+
+		self._photo = "qrc:/uix/assets/images/unknown.svg"
+		if (self.getItemData("profile_photo") or '').strip():
+			self._photo = QUrl.fromLocalFile(self.getItemData("profile_photo")).toString()
 
 		# whenever server starts running,
 		# connect client to server.
@@ -98,8 +99,10 @@ class Helper(QObject):
 		if status:
 			# send profile photo to server
 			url = QUrl(self._photo)
-			message = ClientProfilePhotoBinary(filename=url, client_uid=getUniqueId())
-			self.client.sendBinaryMessage(message.to_qbytearray())
+			if url.isLocalFile():
+				# if its a qrc:/ proto, no need to send. everybody got this
+				message = ClientProfilePhotoBinary(filename=url, client_uid=getUniqueId())
+				self.client.sendBinaryMessage(message.to_qbytearray())
 
 	def connect_client_to_self(self):
 		""" connects client to server once the server starts running
