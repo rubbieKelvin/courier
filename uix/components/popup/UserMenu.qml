@@ -15,6 +15,8 @@ Popup {
 	id: root
 	margins: 0
 	padding: 0
+	height: application.minimal ? application.height : c1_.height + 10
+	width: application.minimal ? application.width : 250
 	closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutsideParent
 	background: Rectangle{
 		radius: 5
@@ -39,11 +41,9 @@ Popup {
 		}
 	}
 	enter: Transition {
-		NumberAnimation{property: "height"; duration: 100; from: 0; to: application.minimal ? application.height : c1_.height + 10}
 		NumberAnimation{property: "width"; from: 0; to: application.minimal ? application.width : 250; duration: 60}
 	}
 	exit: Transition {
-		NumberAnimation{property: "height"; duration: 60; from: root.height; to: 0}
 		NumberAnimation{property: "width"; from: root.width; to: 0; duration: 100}
 	}
 

@@ -10,6 +10,7 @@ Rectangle{
 	property alias menu: menu
 
 	RoundImage{
+		id: img
 		source: {
 			if (helper) return helper.profilephoto
 			return ''
@@ -29,8 +30,7 @@ Rectangle{
 
 	UserMenu{
 		id: menu
-		x: -width-10
-		y: 15
+		x: -width+img.width
 	}
 
 	Rectangle{
