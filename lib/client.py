@@ -28,12 +28,17 @@ from .messages import INTENT_PRIVATE_MESSAGE
 from .messages import INTENT_CONTACT_LIST_REQUEST
 from .messages import INTENT_PROFILE_PHOTO_UPDATE
 
+from .messages import MESSAGE_TYPE_TEXT
+from .messages import MESSAGE_TYPE_STICKER
+from .messages import MESSAGE_TYPE_VOICE_NOTE
+
 from .paths import Path
 from .queue import MessageQueue
 
 from .messages import Json
 from .messages import JsonBinary
 from .messages import ClientHandShakeMessage
+from .messages import PrivateVoiceNoteMessage
 from .messages import ClientPrivateTextMessage
 from .messages import ClientProfileUpdateMessage
 
@@ -168,17 +173,26 @@ class CourierClient(QWebSocket):
 	def sendPrivateMessage(self, text: str, recv_uid: str, sticker: bool=False):
 		""" send a text message `text` to a client with uid==`recv_uid`.
 		the server will recieve the message and send to the client who the message is assigned to.
+		if sticker is true, the message will be sent as a sticker, and text is a svg source.
 		"""
 		message = ClientPrivateTextMessage(
 			text=text,
 			recv_uid=recv_uid,
 			sender_uid=getUniqueId(),
-			msg_type=ClientPrivateTextMessage.STICKER_MESSAGE if sticker else ClientPrivateTextMessage.TEXT_MESSAGE
+			type=MESSAGE_TYPE_STICKER if sticker else MESSAGE_TYPE_TEXT
 		)
 		self.sendTextMessage(str(message))
 
 		# # noinspection PyUnresolvedReferences
 		self.privateMessageSent.emit(message.to_dict())
+
+	@Slot(str, str)
+	def sendVoiceNote(self, filename: str, recv_uid: str):
+		""""""
+		message = PrivateVoiceNoteMessage(QUrl.fromLocalFile(filename), recv_uid=recv_uid, sender_uid=getUniqueId())
+		self.sendBinaryMessage(message.to_qbytearray())
+		data = message.to_dict()
+		self.privateMessageSent.emit(data)
 
 	@Slot(str, str, str)
 	def sendFile(self, message: str, file_url: str, to: str):
@@ -247,9 +261,20 @@ class CourierClient(QWebSocket):
 
 		if intent == INTENT_PROFILE_PHOTO_UPDATE:
 			self.handle_profile_pic_update(message)
+
+		elif intent == INTENT_PRIVATE_MESSAGE:
+			self.handle_binary_pm(message)
 		
 		else:
 			logger.warn("recvd binary with unregistered intent:", message)
+
+	def handle_binary_pm(self, message: JsonBinary):
+		if message.get('message', {}).get('type') == MESSAGE_TYPE_VOICE_NOTE:
+			message.root = Path().VOICENOTE_ROOT
+
+		data = message.to_dict()
+		data["message"]["filename"] = data.get("payload")
+		self.privateMessageReceived.emit(data)
 
 	def handle_profile_pic_update(self, message: JsonBinary):
 		"""this is a client's profile pic.
@@ -282,10 +307,6 @@ class CourierClient(QWebSocket):
 			self._handshake_successful = False
 			self.close(QWebSocketProtocol.CloseCodePolicyViolated, "handshake unsuccessfull")
 		self.handshakeDone.emit(self._handshake_successful)
-
-	def handle_broadcast_intent(self, message: Json):
-		# noinspection PyUnresolvedReferences
-		self.broadcastReceived.emit(message.to_dict())
 
 	def handle_new_peer_intent(self, message: Json):
 		""" this function is called when a new client connected to

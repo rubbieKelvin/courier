@@ -15,6 +15,7 @@ from PySide2 import QtGui
 from lib import db
 from lib.paths import Path
 from lib.helper import Helper
+from lib.recorder import Recorder
 from lib.server import CourierServer
 from lib.client import CourierClient
 
@@ -41,6 +42,7 @@ if __name__ == "__main__":
 		sys.exit("couldn't initialize database.")
 	
 	# Q OBJECT
+	recorder = Recorder()
 	server = CourierServer()
 	client = CourierClient()
 	helper = Helper(
@@ -52,6 +54,7 @@ if __name__ == "__main__":
 	engine.rootContext().setContextProperty("helper", helper)
 	engine.rootContext().setContextProperty("server", server)
 	engine.rootContext().setContextProperty("client", client)
+	engine.rootContext().setContextProperty("recorder", recorder)
 
 	# load engine
 	engine.load(QtCore.QUrl("qrc:///uix/main.qml"))

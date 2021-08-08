@@ -26,6 +26,9 @@ class Path:
 					video=None,
 					others=None,
 					documents=None,
+					voicenotes=dict(
+						me=None
+					),
 					profile_photos=None
 				),
 				'user': None,
@@ -42,6 +45,8 @@ class Path:
 		self.UUID_FILE = os.path.join(self.root, "user", ".u")
 		self.USERNAME_FILE = os.path.join(self.root, "user", ".n")
 		self.PROFILE_PHOTO_ROOT = os.path.join(self.root, "files", "profile_photos")
+		self.VOICENOTE_ROOT = os.path.join(self.root, "files", "voicenotes")
+		self.MY_VOICENOTE_ROOT = os.path.join(self.root, "files", "voicenotes", "me")
 		self.TEMP_ROOT = os.path.join(self.temp_root, 'tmp')
 
 	@staticmethod

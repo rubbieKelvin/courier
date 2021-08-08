@@ -3,7 +3,6 @@ import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 import "../widgets"
 import "../models"
-import "../utils/constants.js" as Constants
 
 Page {
 	id: root
@@ -38,15 +37,8 @@ Page {
 			list.delegate: ChatBalloon{
 				width: (parent || {width: 0}).width
 				showAtLeft: message.sender_uid===client_uid
-				label: message.text
 				maxLabelWidth: width - 100
-				state: {
-					if (message.msg_type===Constants.PRIVATE_MESSAGE_TEXT){
-						return ""
-					}else if (message.msg_type===Constants.PRIVATE_MESSAGE_STICKER){
-						return "sticker"
-					}
-				}
+				msg: message
 			}
 
 			Connections{
@@ -61,6 +53,7 @@ Page {
 
 				function onPrivateMessageReceived(msg_data){
 					// if it was recieved from this guy, add to model
+					print(msg_data)
 					const message = msg_data.message
 					if (message.sender_uid === client_uid)
 						root.model.append(msg_data)

@@ -26,6 +26,10 @@ INTENT_CONTACT_LIST_REQUEST = 4     # used pass contact list to client
 INTENT_PRIVATE_MESSAGE = 5          # used to send private messages between two clients
 INTENT_PROFILE_PHOTO_UPDATE = 6	# used in binary messgaes to update profile photo across network
 
+MESSAGE_TYPE_TEXT = 0
+MESSAGE_TYPE_STICKER = 1
+MESSAGE_TYPE_VOICE_NOTE = 2
+
 
 class Json:
 	def __init__(self, **kwargs) -> None:
@@ -69,6 +73,7 @@ class JsonBinary(Json):
 	def __init__(self, payload: QByteArray, **kwargs) -> None:
 		self._payload = payload
 		self.data = kwargs
+		self.root = Path().FILES_OTHER_ROOT
 		self.data.setdefault('message_id', uuid.uuid4().__str__())
 
 		for key, value in self.data.items():
@@ -84,7 +89,7 @@ class JsonBinary(Json):
 		return f"<JsonBinary {self.__hash__()}>"
 
 	def __str__(self) -> str:
-		return f"<Json Binary ({self.data.get('payload', '').__len__()})>"
+		return f"<JsonBinary ({self.data.get('payload', '').__len__()})>"
 
 	@property
 	def payload_resolved(self):
@@ -99,8 +104,7 @@ class JsonBinary(Json):
 		return d
 
 	def save_to_file(self) -> str:
-		path = Path()
-		filepath = os.path.join(path.FILES_OTHER_ROOT, self.data['message_id'])
+		filepath = os.path.join(self.root, self.data['message_id'])
 		file = QFile(filepath)
 
 		if not file.exists():
@@ -119,6 +123,19 @@ class JsonBinary(Json):
 	def from_qvariant(variant: QJSValue):
 		"""this method is not implemented"""
 		raise NotImplementedError
+
+	@staticmethod
+	def open_file(filename: QUrl) -> QByteArray:
+		if not filename.isLocalFile():
+			raise FileNotFoundError
+
+		filename = filename.toLocalFile()
+
+		file = QFile(filename)
+		if not (file.exists() and file.open(QIODevice.ReadOnly)):
+			raise FileNotFoundError(f'File "{filename}" does not exist')
+		
+		return file.readAll()
 
 	@staticmethod
 	def from_qbytearray(qbytearray: QByteArray):
@@ -198,17 +215,14 @@ class ClientProfileUpdateWithUidMessage(Json):
 
 
 class ClientPrivateTextMessage(Json):
-	TEXT_MESSAGE = 0
-	STICKER_MESSAGE = 1
-
-	def __init__(self, text:str, recv_uid: str, sender_uid: str, msg_type:int=0) -> None:
+	def __init__(self, text:str, recv_uid: str, sender_uid: str, type: int) -> None:
 		super().__init__(
 			intent=INTENT_PRIVATE_MESSAGE,
 			message=dict(
 				text=text,
 				recv_uid=recv_uid,
 				sender_uid=sender_uid,
-				msg_type=msg_type,
+				type=type,
 				uid=uuid.uuid4().__str__(),
 				timestamp=QDateTime.currentDateTime().toString()
 			))
@@ -216,12 +230,26 @@ class ClientPrivateTextMessage(Json):
 
 class ClientProfilePhotoBinary(JsonBinary):
 	def __init__(self, filename: QUrl, client_uid: str) -> None:
-		filename = filename.toLocalFile()
-		extension = os.path.splitext(filename)[-1]
-		file = QFile(filename)
+		extension = os.path.splitext(filename.toLocalFile())[-1]
+		super().__init__(self.open_file(filename), client_uid=client_uid, extension=extension, intent=INTENT_PROFILE_PHOTO_UPDATE)
 
-		if not (file.exists() and file.open(QIODevice.ReadOnly)):
-			raise FileNotFoundError(f'File "{filename}" does not exist')
+class PrivateVoiceNoteMessage(JsonBinary):
+	def __init__(self, filename: QUrl, recv_uid: str, sender_uid: str) -> None:
+		super().__init__(
+			self.open_file(filename),
+			intent=INTENT_PRIVATE_MESSAGE,
+			message=dict(
+				filename="", # this will be determined on the reciever's machine
+				recv_uid=recv_uid,
+				sender_uid=sender_uid,
+				type=MESSAGE_TYPE_VOICE_NOTE,
+				uid=uuid.uuid4().__str__(),
+				timestamp=QDateTime.currentDateTime().toString()
+			)
+		)
+		self.root = Path().MY_VOICENOTE_ROOT
 
-		super().__init__(file.readAll(), client_uid=client_uid, extension=extension, intent=INTENT_PROFILE_PHOTO_UPDATE)
-
+	def to_dict(self) -> dict:
+		d = super().to_dict()
+		d['message']['filename'] = d['payload']
+		return d

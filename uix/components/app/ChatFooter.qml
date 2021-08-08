@@ -16,13 +16,20 @@ BorderedRectangle {
 	topborder.color: theme.stroke
 	property string selectedFileUrl: ""
 
+	signal recorded(string source)
+
 	function start_recording(){
-		root.state = "recording"
-		min_counter.start()
-		sec_counter.start()
+		if (recorder.record()){
+			root.state = "recording"
+			min_counter.start()
+			sec_counter.start()
+		}else{
+			rib_popup.show("Recorder is busy", 2000)
+		}
 	}
 
 	function cancel_recording(){
+		recorder.cancel()
 		root.state = ""
 		min_counter.stop()
 		sec_counter.stop()
@@ -30,8 +37,10 @@ BorderedRectangle {
 
 	function finish_recording(){
 		root.state = ""
+		const filename = recorder.stopRecording()
 		min_counter.stop()
 		sec_counter.stop()
+		client.sendVoiceNote(filename, client_uid)
 	}
 
 	function send_text_message(){
@@ -160,6 +169,12 @@ BorderedRectangle {
 				])
 				tiptext: "record voice note"
 				onClicked: root.start_recording()
+
+				CustomTip{
+					id: rib_popup
+					bg_color: "red"
+					fg_color: "white"
+				}
 			}
 
 			ToolButtonIcon {

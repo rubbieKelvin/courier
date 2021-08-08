@@ -3,6 +3,7 @@ import QtQuick.Layouts 1.3
 import QtQuick.Controls 2.15
 import Qt.labs.settings 1.1
 import Qt.labs.platform 1.1
+import QtMultimedia 5.12
 import "./components/app"
 import "./components/utils"
 import "./components/popup"
@@ -20,30 +21,31 @@ ApplicationWindow {
 	title: "Courier"
 	font.family: poppins_regular.name
 	font.pixelSize: 12
-	background: Rectangle{
+	background: Rectangle {
 		color: theme.background
 	}
 
+	property Audio currentAudio
 	property string settingsFileName: "settings.ini"
-	property ContactModel contact_model: ContactModel{}
+	property ContactModel contact_model: ContactModel {}
 	readonly property bool minimal: (application.width < 400)
 
 	// when a peer is clicked on the left side, this value will change
 	// which will then be used to update the chatstack
 	property int _currentPeerIndex: -1
 
-
 	// this property tells what state the server/client pair is in
 	readonly property string courier_state: {
-		if (!client || !server) return Constants.COURIER_MODE_IDLE
+		if (!client || !server)
+			return Constants.COURIER_MODE_IDLE
 
 		if (!server.running && !client.running) {
 			return Constants.COURIER_MODE_IDLE
-		}else if (!server.running && client.running){
+		} else if (!server.running && client.running) {
 			return Constants.COURIER_MODE_CLIENT
-		}else if (server.running && client.running){
+		} else if (server.running && client.running) {
 			return Constants.COURIER_MODE_SERVER
-		}else{
+		} else {
 			return Constants.COURIER_MODE_SETTING_SERVER
 		}
 	}
@@ -62,38 +64,41 @@ ApplicationWindow {
 		property bool darkmode: true
 	}
 
-	Settings{
+	Settings {
 		id: notif_settings
 		fileName: settingsFileName
 		category: "Notification"
 		property bool do_not_disturb: false
 	}
 
-	Theme{
+	Theme {
 		id: theme
 		darkmode: apperance_settings.darkmode
 	}
 
-	FontLoader{
+	FontLoader {
 		id: poppins_regular
 		source: "assets/fonts/Poppins/Poppins-Regular.ttf"
 	}
 
-	HelperFunctions{id:_}
+	HelperFunctions {
+		id: _
+	}
 
-	AppHeader{
+	AppHeader {
 		id: header
 		anchors.left: parent.left
 		anchors.right: parent.right
 		property string currentPageName: "chat"
 
 		onRequestPage: {
-			if (currentPageName == pagename) return
+			if (currentPageName == pagename)
+				return
 			currentPageName = pagename
 
-			if (pagename == "chat"){
+			if (pagename == "chat") {
 				main_stack.replace("./chatpage.qml")
-			}else if (pagename == "file"){
+			} else if (pagename == "file") {
 				main_stack.replace("./filepage.qml")
 			}
 		}
@@ -107,18 +112,18 @@ ApplicationWindow {
 		anchors.topMargin: 0
 		spacing: 0
 
-		LeftSection{
+		LeftSection {
 			Layout.preferredWidth: width
 			Layout.fillHeight: true
 		}
 
-		StackLayout{
+		StackLayout {
 			id: main_stack
 			Layout.fillHeight: true
 			Layout.fillWidth: true
 			clip: true
 
-			Chat{
+			Chat {
 				Layout.fillWidth: true
 				Layout.fillHeight: true
 			}
@@ -132,7 +137,8 @@ ApplicationWindow {
 		menu: Menu {
 
 			MenuItem {
-				enabled: courier_state !== Constants.COURIER_MODE_CLIENT && courier_state !== Constants.COURIER_MODE_SERVER
+				enabled: courier_state !== Constants.COURIER_MODE_CLIENT
+						 && courier_state !== Constants.COURIER_MODE_SERVER
 				text: qsTr("Create Server")
 				onTriggered: {
 					header.avatar.menu.openCreateServerPopup()
@@ -141,7 +147,8 @@ ApplicationWindow {
 			}
 
 			MenuItem {
-				enabled: courier_state !== Constants.COURIER_MODE_CLIENT && courier_state !== Constants.COURIER_MODE_SERVER
+				enabled: courier_state !== Constants.COURIER_MODE_CLIENT
+						 && courier_state !== Constants.COURIER_MODE_SERVER
 				text: qsTr("Join Server")
 				onTriggered: {
 					header.avatar.menu.openJoinServerPopup()
@@ -157,8 +164,10 @@ ApplicationWindow {
 			}
 
 			MenuItem {
-				enabled: courier_state==Constants.COURIER_MODE_SERVER || courier_state==Constants.COURIER_MODE_CLIENT
-				text: qsTr((courier_state==Constants.COURIER_MODE_SERVER) ? "Shutdown Server" : "Leave Server")
+				enabled: courier_state == Constants.COURIER_MODE_SERVER
+						 || courier_state == Constants.COURIER_MODE_CLIENT
+				text: qsTr((courier_state
+							== Constants.COURIER_MODE_SERVER) ? "Shutdown Server" : "Leave Server")
 				onTriggered: _.shutdownCourierNetwork()
 			}
 
@@ -173,6 +182,8 @@ ApplicationWindow {
 /* TODO: make the stack that holds chatpage.qml and filepage.qml a StackLayout instead of StackView
   so the chatpage.qml doesnt reconstruct every time, costing us machine resource.
 */
+
+
 /*##^##
 Designer {
 	D{i:0;formeditorZoom:0.66}

@@ -2,34 +2,52 @@ import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 import "../utils/svg.js" as Svg
+import "../utils/constants.js" as Constants
 
 RowLayout {
 	id: root
-	property bool showAtLeft: true
-	property string label: ""
-	property int maxLabelWidth: 400
+	state: {
+		switch (msg.type) {
+		case Constants.PRIVATE_MESSAGE_TEXT:
+			return ""
+		case Constants.PRIVATE_MESSAGE_STICKER:
+			return "sticker"
+		case Constants.PRIVATE_MESSAGE_VOICE_NOTE:
+			return "voicenote"
+		default:
+			throw new Error(`invalid message type: ${msg.type}`)
+		}
+	}
 
-	Item{
+	property bool showAtLeft: true
+	property int maxLabelWidth: 400
+	property variant msg: ({})
+
+	Item {
 		Layout.fillWidth: !showAtLeft
 		Layout.preferredHeight: 5
 	}
 
 	// main stuff
-	ColumnLayout{
+	ColumnLayout {
 		id: columnLayout
 		spacing: 8
 
-		Label{
+		Label {
 			id: text_
-			text: label
-			color: showAtLeft ? theme.text : "white"
+			color: theme.text
 			font.pixelSize: 10
 			wrapMode: Text.WordWrap
 			padding: 10
 			Layout.maximumWidth: maxLabelWidth
-			background: Rectangle{
+			background: Rectangle {
 				radius: 10
-				color: showAtLeft ? theme.secondary : theme.accent
+				color: showAtLeft ? theme.secondary : theme.accent_light
+			}
+
+			Component.onCompleted: {
+				if (msg.type === Constants.PRIVATE_MESSAGE_TEXT)
+					text = msg.text
 			}
 		}
 
@@ -44,32 +62,42 @@ RowLayout {
 			fillMode: Image.PreserveAspectFit
 
 			Component.onCompleted: {
-				if (root.state === "sticker")
-					source = Svg.fromString([label])
+				if (msg.type === Constants.PRIVATE_MESSAGE_STICKER)
+					source = Svg.fromString([msg.text])
 			}
-
 		}
 
-		Label{
+		VoiceNote {
+			id: vn
+			width: 200
+			visible: false
+			enabled: false
+			color: showAtLeft ? theme.secondary : theme.accent_light
+			label_color: theme.text
+			message: msg
+		}
+
+		Label {
 			id: time_text
 			font.pixelSize: 8
 			horizontalAlignment: showAtLeft ? Text.AlignLeft : Text.AlignRight
 			verticalAlignment: Text.AlignVCenter
 			color: theme.disabled
-			text: "00:00am"
+			text: msg.timestamp
 			Layout.preferredWidth: {
-				if (root.state === ""){
+				switch (msg.type) {
+				case Constants.PRIVATE_MESSAGE_TEXT:
 					return text_.width
-				}else if (root.state === "sticker"){
+				case Constants.PRIVATE_MESSAGE_STICKER:
 					return image.width
+				case Constants.PRIVATE_MESSAGE_VOICE_NOTE:
+					return vn.width
 				}
 			}
-
 		}
-
 	}
 
-	Item{
+	Item {
 		Layout.fillWidth: showAtLeft
 		Layout.preferredHeight: 5
 	}
@@ -77,22 +105,51 @@ RowLayout {
 		State {
 			name: "sticker"
 
-   PropertyChanges {
-	   target: text_
-	   width: 0
-	   height: 0
-	   visible: false
-	   enabled: false
-   }
+			PropertyChanges {
+				target: text_
+				width: 0
+				height: 0
+				visible: false
+				enabled: false
+			}
 
-   PropertyChanges {
-	   target: image
-	   visible: true
-	   enabled: true
-	   fillMode: Image.PreserveAspectFit
-   }
+			PropertyChanges {
+				target: image
+				visible: true
+				enabled: true
+				fillMode: Image.PreserveAspectFit
+			}
+
+			PropertyChanges {
+				target: vn
+				visible: false
+				enabled: false
+			}
+		},
+		State {
+			name: "voicenote"
+			PropertyChanges {
+				target: text_
+				width: 0
+				height: 0
+				visible: false
+				enabled: false
+			}
+
+			PropertyChanges {
+				target: image
+				visible: false
+				fillMode: Image.PreserveAspectFit
+				enabled: false
+			}
+
+			PropertyChanges {
+				target: vn
+				visible: true
+				enabled: true
+			}
 		}
- ]
+	]
 }
 
 /*##^##
@@ -100,3 +157,4 @@ Designer {
 	D{i:0;formeditorZoom:0.33;width:1300}
 }
 ##^##*/
+

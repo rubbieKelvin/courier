@@ -12,6 +12,7 @@ Rectangle {
 	color: root.down ? "#22000000" : "transparent"
 	property alias source: image.source
 	property string tiptext: ""
+	property int tiptimeout: 3000
 
 	signal clicked
 
@@ -33,5 +34,6 @@ Rectangle {
 		delay: 1000
 		visible: mouse.containsMouse && !!tiptext
 		text: tiptext
+		timeout: tiptimeout
 	}
 }

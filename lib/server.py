@@ -226,6 +226,10 @@ class CourierServer(QWebSocketServer):
 
 		if intent == INTENT_PROFILE_PHOTO_UPDATE:
 			self.handle_profile_photo_update(client, message)
+
+		elif intent == INTENT_PRIVATE_MESSAGE:
+			self.handle_private_binary_message(client, message)
+
 		else:
 			logger.warn("got binrary with unregistered intent:", message)
 
@@ -279,14 +283,21 @@ class CourierServer(QWebSocketServer):
 		""" this function is called when a private text is recieved.
 		the text is sent to the client who's dummy has the matching uid. 
 		"""
-		dummy = self.get_dummy(client)
 		txt_message: dict = message.get('message', {})
 
 		# # send to receiver
-		receiver: QWebSocket
 		for recv_dummy in self.clients:
 			if recv_dummy.uid  == txt_message.get('recv_uid'):
 				self.sendTextMessage(recv_dummy.client, str(message))
+				return
+
+	def handle_private_binary_message(self, client: QWebSocket, message: JsonBinary):
+		""""""
+		bin_message: dict = message.get('message', {})
+
+		for recv_dummy in self.clients:
+			if recv_dummy.uid == bin_message.get('recv_uid'):
+				self.sendBinaryMessage(recv_dummy.client, message.to_qbytearray())
 				return
 
 	@Slot()

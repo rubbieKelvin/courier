@@ -56,5 +56,7 @@
         <file>uix/components/models/MessageModel.qml</file>
         <file>uix/components/utils/ShadowDropEffect.qml</file>
         <file>uix/assets/images/unknown.svg</file>
+        <file>uix/components/widgets/VoiceNote.qml</file>
+        <file>uix/components/app/SettingsPage.qml</file>
     </qresource>
 </RCC>

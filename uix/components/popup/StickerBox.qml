@@ -152,7 +152,7 @@ Popup {
 
 	Timer{
 		id: closer
-		interval: 180
+		interval: 100
 		repeat: false
 		onTriggered: root.close()
 	}
