@@ -14,6 +14,8 @@ RowLayout {
 			return "sticker"
 		case Constants.PRIVATE_MESSAGE_VOICE_NOTE:
 			return "voicenote"
+		case Constants.PRIVATE_MESSAGE_TYPE_BINARY_FILE:
+			return "file"
 		default:
 			throw new Error(`invalid message type: ${msg.type}`)
 		}
@@ -77,6 +79,15 @@ RowLayout {
 			message: msg
 		}
 
+		FileBalloon {
+			id: fb
+			width: 200
+			visible: false
+			enabled: false
+			color: showAtLeft ? theme.secondary : theme.accent_light
+			message: msg
+		}
+
 		Label {
 			id: time_text
 			font.pixelSize: 8
@@ -92,6 +103,8 @@ RowLayout {
 					return image.width
 				case Constants.PRIVATE_MESSAGE_VOICE_NOTE:
 					return vn.width
+				case Constants.PRIVATE_MESSAGE_TYPE_BINARY_FILE:
+					return fb.width
 				}
 			}
 		}
@@ -145,6 +158,23 @@ RowLayout {
 
 			PropertyChanges {
 				target: vn
+				visible: true
+				enabled: true
+			}
+		},
+		State {
+			name: "file"
+
+			PropertyChanges {
+				target: text_
+				width: 0
+				height: 0
+				visible: false
+				enabled: false
+			}
+
+			PropertyChanges {
+				target: fb
 				visible: true
 				enabled: true
 			}

@@ -50,6 +50,14 @@ ApplicationWindow {
 		}
 	}
 
+	function openSettings() {
+		settings_page.state = "opened"
+	}
+
+	function closeSettings() {
+		settings_page.state = ""
+	}
+
 	Settings {
 		category: "Window"
 		fileName: settingsFileName
@@ -126,6 +134,27 @@ ApplicationWindow {
 			Chat {
 				Layout.fillWidth: true
 				Layout.fillHeight: true
+			}
+		}
+
+		SettingsPage {
+			id: settings_page
+			Layout.fillHeight: true
+			Layout.preferredWidth: 0
+			states: [
+				State {
+					name: "opened"
+					PropertyChanges {
+						target: settings_page
+						Layout.preferredWidth: 300
+					}
+				}
+			]
+			transitions: Transition {
+				NumberAnimation {
+					property: "Layout.preferredWidth"
+					duration: 150
+				}
 			}
 		}
 	}

@@ -219,7 +219,6 @@ class CourierServer(QWebSocketServer):
 
 	def on_binary_received(self, data: QByteArray):
 		client: QWebSocket = self.sender()
-		dummy = self.get_dummy(client)
 
 		message = JsonBinary.from_qbytearray(data)
 		intent = message.get('intent')

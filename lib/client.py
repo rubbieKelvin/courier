@@ -12,8 +12,6 @@ from PySide2.QtCore import QUrl
 from PySide2.QtCore import Slot
 from PySide2.QtCore import QFile
 from PySide2.QtCore import Signal
-from PySide2.QtCore import QThread
-from PySide2.QtQml import QJSValue
 from PySide2.QtCore import Property
 from PySide2.QtCore import QIODevice
 from PySide2.QtCore import QByteArray
@@ -31,12 +29,14 @@ from .messages import INTENT_PROFILE_PHOTO_UPDATE
 from .messages import MESSAGE_TYPE_TEXT
 from .messages import MESSAGE_TYPE_STICKER
 from .messages import MESSAGE_TYPE_VOICE_NOTE
+from .messages import MESSAGE_TYPE_BINARY_FILE
 
 from .paths import Path
 from .queue import MessageQueue
 
 from .messages import Json
 from .messages import JsonBinary
+from .messages import PrivateMessageFile
 from .messages import ClientHandShakeMessage
 from .messages import PrivateVoiceNoteMessage
 from .messages import ClientPrivateTextMessage
@@ -86,7 +86,7 @@ class CourierClient(QWebSocket):
 			- username: str
 			- password: str
 		4. wait for success message
-		5. if successfull, we're in.
+		5. if successful, we're in.
 		"""
 
 		super(CourierClient, self).__init__()
@@ -170,9 +170,9 @@ class CourierClient(QWebSocket):
 
 	@Slot(str, str)
 	@Slot(str, str, bool)
-	def sendPrivateMessage(self, text: str, recv_uid: str, sticker: bool=False):
+	def sendPrivateMessage(self, text: str, recv_uid: str, sticker: bool = False):
 		""" send a text message `text` to a client with uid==`recv_uid`.
-		the server will recieve the message and send to the client who the message is assigned to.
+		the server will receive the message and send to the client who the message is assigned to.
 		if sticker is true, the message will be sent as a sticker, and text is a svg source.
 		"""
 		message = ClientPrivateTextMessage(
@@ -183,55 +183,40 @@ class CourierClient(QWebSocket):
 		)
 		self.sendTextMessage(str(message))
 
-		# # noinspection PyUnresolvedReferences
+		# noinspection PyUnresolvedReferences
 		self.privateMessageSent.emit(message.to_dict())
 
 	@Slot(str, str)
 	def sendVoiceNote(self, filename: str, recv_uid: str):
 		""""""
-		message = PrivateVoiceNoteMessage(QUrl.fromLocalFile(filename), recv_uid=recv_uid, sender_uid=getUniqueId())
+		message = PrivateVoiceNoteMessage(
+			QUrl.fromLocalFile(filename),
+			recv_uid=recv_uid,
+			sender_uid=getUniqueId())
+
 		self.sendBinaryMessage(message.to_qbytearray())
 		data = message.to_dict()
+		# noinspection PyUnresolvedReferences
 		self.privateMessageSent.emit(data)
 
-	@Slot(str, str, str)
-	def sendFile(self, message: str, file_url: str, to: str):
-		# file_sender = FileTransferWorker(self, file_url=QUrl(file_url), message=message, receiver_uid=to)
+	@Slot(str, str)
+	def sendFile(self, fileurl: str, to: str):
+		message = PrivateMessageFile(
+			filename=QUrl(fileurl),
+			recv_uid=to,
+			sender_uid=getUniqueId())
 
-		# def do_del():
-		# 	logger.debug("deleting", file_sender)
-		# 	file_sender.deleteLater()
-
-		# file_sender.finished.connect(do_del)
-		# # noinspection PyUnresolvedReferences
-		# file_sender.payloadHandled.connect(self.binary_payload_handled)
-		# file_sender.start()
-		pass
-
-	# noinspection PyMethodMayBeStatic
-	# def binary_payload_handled(self, binary: Binary):
-	# 	byte_array = binary.toQByteArray()
-	# 	self.sendBinaryMessage(byte_array)
-	# 	# call a binary sent signal here
-	# 	# noinspection PyUnresolvedReferences
-	# 	self.binarySent.emit(binary.toDict())
-
-	# noinspection PyTypeChecker
-	# @Slot("QVariant")
-	# def update_profile(self, data: QJSValue):
-	# 	data: dict = data.toVariant()
-	# 	self.data_.update(data)
-	# 	# noinspection PyUnresolvedReferences
-	# 	self.dataChanged.emit(self.data_)
-	# 	self.sendTextMessage(
-	# 		str(Text(self.data_, intent=INTENT_PROFILE_UPDATE)))
+		self.sendBinaryMessage(message.to_qbytearray())
+		data = message.to_dict()
+		# noinspection PyUnresolvedReferences
+		self.privateMessageSent.emit(data)
 
 	# noinspection PyMethodMayBeStatic
 	def on_error(self, error: QAbstractSocket.SocketError):
 		logger.error(f"error: {str(error)}")
 
 	def on_text_received(self, text: str):
-		""" this method will be called once a text is recieved from the server.
+		""" this method will be called once a text is received from the server.
 		"""
 		message: Json = Json.from_str(text)
 		intent: str = message.get('intent')
@@ -266,14 +251,17 @@ class CourierClient(QWebSocket):
 			self.handle_binary_pm(message)
 		
 		else:
-			logger.warn("recvd binary with unregistered intent:", message)
+			logger.warn("received binary with unregistered intent:", message)
 
 	def handle_binary_pm(self, message: JsonBinary):
 		if message.get('message', {}).get('type') == MESSAGE_TYPE_VOICE_NOTE:
 			message.root = Path().VOICENOTE_ROOT
+		elif message.get('message', {}).get('type') == MESSAGE_TYPE_BINARY_FILE:
+			message.filename = message.get('message', {}).get('name', "unknown")
 
 		data = message.to_dict()
 		data["message"]["filename"] = data.get("payload")
+		# noinspection PyUnresolvedReferences
 		self.privateMessageReceived.emit(data)
 
 	def handle_profile_pic_update(self, message: JsonBinary):
@@ -281,6 +269,7 @@ class CourierClient(QWebSocket):
 		save the binary to file, and then send a signal with the file name
 		"""
 		path = Path()
+		# noinspection PyProtectedMember
 		payload = message._payload
 		filename = uuid4().__str__()[:10]+message.get('extension', '.img')
 		filepath = os.path.join(path.PROFILE_PHOTO_ROOT, filename)
@@ -290,6 +279,7 @@ class CourierClient(QWebSocket):
 			file.write(payload)
 
 			url = QUrl.fromLocalFile(filepath)
+			# noinspection PyUnresolvedReferences
 			self.peerUpdatedProfilePic.emit({
 				'uid': message.get('client_uid'),
 				'url': url.toString()
@@ -297,15 +287,18 @@ class CourierClient(QWebSocket):
 
 	def handle_handshake(self, message: Json):
 		# we'll get a successful=true message if authentication is successful.
-		
+
+		# noinspection PyUnresolvedReferences
 		self.handshakeReceived.emit(message.to_dict())
 		if message.get('successful'):
 			self._running = True
 			self._handshake_successful = True
+			# noinspection PyUnresolvedReferences
 			self.runningChanged.emit(self._running)
 		else:
 			self._handshake_successful = False
-			self.close(QWebSocketProtocol.CloseCodePolicyViolated, "handshake unsuccessfull")
+			self.close(QWebSocketProtocol.CloseCodePolicyViolated, "handshake unsuccessful")
+		# noinspection PyUnresolvedReferences
 		self.handshakeDone.emit(self._handshake_successful)
 
 	def handle_new_peer_intent(self, message: Json):
@@ -327,17 +320,19 @@ class CourierClient(QWebSocket):
 		""" this method is called when another client updates its profile.
 		this data should be handled in some helper class, or in qml file.
 		"""
+		# noinspection PyUnresolvedReferences
 		self.clientProfileUpdateReceived.emit(message.to_dict())
 
 	def handle_pm_intent(self, message: Json):
 		""" this method is called when the client get the message
 		written to it from another client.
 		"""
+		# noinspection PyUnresolvedReferences
 		self.privateMessageReceived.emit(message.to_dict())
 
 	def on_connected(self):
 		""" send auth details. after auth details are sent,
-		a text will be recieved from the server with a intent=INTENT_HANDSHAKE (which we'l have to listen for)
+		a text will be received from the server with a intent=INTENT_HANDSHAKE (which we'll have to listen for)
 		the text will be structured as laid out in messages.AuthStatusMessage,
 		which will contain data, that tells if authentication was successful.
 		"""
@@ -355,6 +350,7 @@ class CourierClient(QWebSocket):
 		logger.log("client disconnected")
 		self._running = False
 		self._handshake_successful = False
+		# noinspection PyUnresolvedReferences
 		self.runningChanged.emit(self._running)
 
 	@Property(bool, notify=runningChanged)
@@ -366,7 +362,7 @@ class CourierClient(QWebSocket):
 		return self._handshake_successful
 
 	@Slot(str)
-	def updateUsernameOnServer(self, username: str):
-		message = ClientProfileUpdateMessage(username=username)
+	def updateUsernameOnServer(self, /, _username: str):
+		message = ClientProfileUpdateMessage(username=_username)
 		logger.debug("updating username on server")
 		self.sendTextMessage(message.__str__())

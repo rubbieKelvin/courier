@@ -21,11 +21,8 @@ class Path:
 			# prepare folders	
 			Path.mk_tree(self.root, {
 				'files': dict(
-					images=None,
-					audio=None,
-					video=None,
+					sent=None,
 					others=None,
-					documents=None,
 					voicenotes=dict(
 						me=None
 					),
@@ -48,6 +45,7 @@ class Path:
 		self.VOICENOTE_ROOT = os.path.join(self.root, "files", "voicenotes")
 		self.MY_VOICENOTE_ROOT = os.path.join(self.root, "files", "voicenotes", "me")
 		self.TEMP_ROOT = os.path.join(self.temp_root, 'tmp')
+		self.SENT_ROOT = os.path.join(self.root, 'files', 'sent')
 
 	@staticmethod
 	def mk_tree(root_: str, tree: dict):

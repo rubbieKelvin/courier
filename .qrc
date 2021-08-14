@@ -58,5 +58,6 @@
         <file>uix/assets/images/unknown.svg</file>
         <file>uix/components/widgets/VoiceNote.qml</file>
         <file>uix/components/app/SettingsPage.qml</file>
+        <file>uix/components/widgets/FileBalloon.qml</file>
     </qresource>
 </RCC>

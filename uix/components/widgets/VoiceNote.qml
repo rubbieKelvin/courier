@@ -4,6 +4,7 @@ import QtQuick.Layouts 1.11
 import QtMultimedia 5.12
 import "../controls"
 import "../utils/svg.js" as Svg
+import "../utils/constants.js" as Constants
 
 Rectangle {
 	id: root
@@ -43,7 +44,8 @@ Rectangle {
 		property bool isPlaying: false
 
 		Component.onCompleted: {
-			source = message.filename
+			if (message.type === Constants.PRIVATE_MESSAGE_VOICE_NOTE)
+				source = message.filename
 		}
 
 		onPaused: isPlaying = false
