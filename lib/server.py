@@ -193,8 +193,10 @@ class CourierServer(QWebSocketServer):
 		self.runningChanged.emit(False)
 
 	def on_client_disconnected(self):
-		# noinspection PyUnusedLocal
 		client: QWebSocket = self.sender()
+		dummy = self.get_dummy(client)
+		self.clients.remove(dummy)
+		del CourierClientDummy.MAP[client]
 
 	def on_text_received(self, text: str):
 		"""
@@ -306,8 +308,7 @@ class CourierServer(QWebSocketServer):
 		
 		for dummy in self.clients:
 			dummy.client.close(QWebSocketProtocol.CloseCodeGoingAway, "server shutdown")
+
 		self.clients.clear()
 		CourierClientDummy.MAP = dict()
 		self.close()
-
-# TODO: onclient disconnect, remove client from clients list

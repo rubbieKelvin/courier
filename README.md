@@ -1,6 +1,10 @@
 # Courier
 
-corrier is simple desktop aplication for sending files and messages between computers using your Local WiFi or Internet Connection.
+![courier cover](images/cover.png)
+
+Courier is desktop aplication witten in [Python](https://python.org/) and [Qt](https://qt.io/) for data transfer between machines connected to the same network. You can see the Ui design [here](https://www.figma.com/file/YilWzyYLOJDPxSjy4xw1Oq/Courier) The connection uses WebSockets to send text and binary data.
+
+WebSockets is a web technology providing full-duplex communications channels over a single TCP connection. The WebSocket protocol was standardized by the IETF as [RFC 6455](http://tools.ietf.org/html/rfc6455) in 2011.
 
 ## Running Courier
 

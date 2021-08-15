@@ -12,20 +12,15 @@ TextField {
 		id: rectangle
 		height: parent.height
 		width: parent.width
-		radius: height/2
+		radius: height / 2
 		color: "transparent"
 
-		Image{
+		Image {
 			anchors.verticalCenter: parent.verticalCenter
-			source: Svg.fromString([
-			   '<svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">',
-			   `<ellipse cx="9.80553" cy="9.8055" rx="7.49047" ry="7.49047" stroke="${root.focus ? theme.accent : theme.disabled}" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>`,
-			   `<path d="M15.0153 15.4043L17.9519 18.3333" stroke="${root.focus ? theme.accent : theme.disabled}" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>`,
-			   '</svg>'
-			])
+			source: Svg.fromString(
+						['<svg width="18" height="18" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">', `<ellipse cx="9.80553" cy="9.8055" rx="7.49047" ry="7.49047" stroke="${root.focus ? theme.accent : theme.disabled}" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>`, `<path d="M15.0153 15.4043L17.9519 18.3333" stroke="${root.focus ? theme.accent : theme.disabled}" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>`, '</svg>'])
 			sourceSize.height: 20
 			sourceSize.width: 20
-
 		}
 	}
 

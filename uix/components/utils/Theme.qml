@@ -17,9 +17,10 @@ QtObject {
 	readonly property color offline: "#3f3f3f"
 	readonly property color online: "#6ce463"
 	readonly property QtObject fontsize: QtObject {
-		readonly property int helptext: 9 + root.fontscale
-		readonly property int heading: 12 + root.fontscale
-		readonly property int normal: 10 + root.fontscale
-		readonly property int tiny: 8 + root.fontscale
+		readonly property int scale: root.fontscale * 1
+		readonly property int helptext: 9 + scale
+		readonly property int heading: 12 + scale
+		readonly property int normal: 10 + scale
+		readonly property int tiny: 8 + scale
 	}
 }
