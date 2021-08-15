@@ -1,8 +1,10 @@
 import QtQuick 2.0
 
-QtObject{
+QtObject {
 	id: root
 	property bool darkmode: false
+	property int fontscale: 0
+
 	readonly property color accent: "#695EE7"
 	readonly property color disabled: "#9F9F9F"
 	readonly property color accent_light: darkmode ? "#2F2C55" : "#D2CFF8"
@@ -14,4 +16,10 @@ QtObject{
 	readonly property color stroke: darkmode ? "#1C1C1C" : "#F0F0F0"
 	readonly property color offline: "#3f3f3f"
 	readonly property color online: "#6ce463"
+	readonly property QtObject fontsize: QtObject {
+		readonly property int helptext: 9 + root.fontscale
+		readonly property int heading: 12 + root.fontscale
+		readonly property int normal: 10 + root.fontscale
+		readonly property int tiny: 8 + root.fontscale
+	}
 }

@@ -20,7 +20,7 @@ ApplicationWindow {
 	minimumWidth: 300
 	title: "Courier"
 	font.family: poppins_regular.name
-	font.pixelSize: 12
+	font.pixelSize: theme.fontsize.normal
 	background: Rectangle {
 		color: theme.background
 	}
@@ -70,6 +70,7 @@ ApplicationWindow {
 		category: "Appearance"
 		fileName: settingsFileName
 		property bool darkmode: true
+		property int fontscale: 0
 	}
 
 	Settings {
@@ -82,6 +83,7 @@ ApplicationWindow {
 	Theme {
 		id: theme
 		darkmode: apperance_settings.darkmode
+		fontscale: apperance_settings.fontscale
 	}
 
 	FontLoader {
@@ -156,6 +158,7 @@ ApplicationWindow {
 					duration: 150
 				}
 			}
+			visible: Layout.preferredWidth > 0
 		}
 	}
 

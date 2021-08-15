@@ -90,7 +90,7 @@ BorderedRectangle {
 				placeholderText: "Type Something..."
 				color: theme.text
 				focus: true
-				font.pixelSize: 10
+				font.pixelSize: theme.fontsize.normal
 				background: Rectangle {
 					color: "transparent"
 				}

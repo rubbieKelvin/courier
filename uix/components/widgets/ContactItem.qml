@@ -90,7 +90,7 @@ Rectangle{
 			Label{
 				id: contact_description
 				text: "there's a box on somthing..."
-				font.pixelSize: 9
+				font.pixelSize: theme.fontsize.helptext
 				color: theme.text_light
 			}
 		}

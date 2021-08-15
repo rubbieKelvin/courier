@@ -43,39 +43,6 @@ from .messages import ClientPrivateTextMessage
 from .messages import ClientProfileUpdateMessage
 
 
-# class FileTransferWorker(QThread):
-# 	def __init__(self, client: QWebSocket, file_url: QUrl, message: str, receiver_uid: str):
-# 		super(FileTransferWorker, self).__init__()
-# 		self.file_url = file_url
-# 		self.client = client
-# 		self.message = message
-# 		self.extension = os.path.splitext(file_url.toLocalFile())[-1]
-# 		self.receiver_uid = receiver_uid
-# 		self.finished.connect(lambda: logger.log(f"finished thread handling {self.file_url}"))
-
-# 	payloadHandled = Signal(Binary)
-
-# 	def run(self):
-# 		local_file = self.file_url.toLocalFile()
-# 		file = QFile(local_file)
-
-# 		if not (file.exists() and file.open(QIODevice.ReadOnly)):
-# 			# noinspection PyUnresolvedReferences
-# 			return
-
-# 		byte_array = file.readAll()
-
-# 		binary: Binary = Binary(
-# 			id_=uuid4(),
-# 			message=self.message,
-# 			receiver_uid=self.receiver_uid,
-# 			binary=byte_array,
-# 			extension=self.extension)
-
-# 		# noinspection PyUnresolvedReferences
-# 		self.payloadHandled.emit(binary)
-
-
 class CourierClient(QWebSocket):
 	def __init__(self):
 		"""

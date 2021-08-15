@@ -4,7 +4,7 @@ import QtGraphicalEffects 1.12
 
 ToolTip {
 	id: root
-	font.pixelSize: 10
+	font.pixelSize: theme.fontsize.normal
 	background: Rectangle{
 		color: root.bg_color
 		border.width: 1

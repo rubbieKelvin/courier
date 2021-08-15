@@ -19,7 +19,7 @@ Rectangle {
 			id: filename_text
 			color: theme.text
 			Layout.fillWidth: true
-			font.pixelSize: 10
+			font.pixelSize: theme.fontsize.normal
 		}
 
 		ToolButtonIcon {

@@ -59,5 +59,7 @@
         <file>uix/components/widgets/VoiceNote.qml</file>
         <file>uix/components/app/SettingsPage.qml</file>
         <file>uix/components/widgets/FileBalloon.qml</file>
+        <file>uix/components/controls/CustomSpinBox.qml</file>
+        <file>uix/components/controls/CustomSpinBoxIndicator.qml</file>
     </qresource>
 </RCC>

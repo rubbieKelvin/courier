@@ -47,13 +47,13 @@ ItemDelegate {
 			Label {
 				text: root.text
 				verticalAlignment: Text.AlignVCenter
-				font.pixelSize: 10
+				font.pixelSize: theme.fontsize.normal
 				color: theme.text
 			}
 
 			Label{
 				id: subtitle
-				font.pixelSize: 9
+				font.pixelSize: theme.fontsize.helptext
 				verticalAlignment: Text.AlignVCenter
 				visible: !!text
 			}

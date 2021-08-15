@@ -183,7 +183,7 @@ Popup {
 								return 'server setting up...'
 							}
 						}
-						font.pixelSize: 9
+						font.pixelSize: theme.fontsize.helptext
 						color: theme.text_light
 					}
 				}
@@ -246,7 +246,7 @@ Popup {
 							color: "transparent"
 						}
 						color: theme.text
-						font.pixelSize: 9
+						font.pixelSize: theme.fontsize.helptext
 						enabled: !create_server_btn.busy
 
 						onTextChanged: {
@@ -364,7 +364,7 @@ Popup {
 								color: "transparent"
 							}
 							color: theme.text
-							font.pixelSize: 9
+							font.pixelSize: theme.fontsize.helptext
 						}
 					}
 
@@ -389,7 +389,7 @@ Popup {
 								color: "transparent"
 							}
 							color: theme.text
-							font.pixelSize: 9
+							font.pixelSize: theme.fontsize.helptext
 						}
 					}
 
@@ -493,7 +493,7 @@ Popup {
 					width: parent.width
 					text: "Do not disturb"
 					textColor: theme.text
-					font.pixelSize: 10
+					font.pixelSize: theme.fontsize.normal
 					checked: notif_settings.do_not_disturb
 					onCheckedChanged: notif_settings.do_not_disturb = checked
 
@@ -513,13 +513,21 @@ Popup {
 				bottomborder.color: theme.stroke
 
 				CustomSwitch {
+					id: darkmode_swtch
 					height: parent.height
 					width: parent.width
 					text: "Dark mode"
 					textColor: theme.text
-					font.pixelSize: 10
+					font.pixelSize: theme.fontsize.normal
 					checked: apperance_settings.darkmode
 					onCheckedChanged: apperance_settings.darkmode = checked
+
+					Connections {
+						target: apperance_settings
+						function onDarkmodeChanged() {
+							darkmode_swtch.checked = apperance_settings.darkmode
+						}
+					}
 				}
 			}
 

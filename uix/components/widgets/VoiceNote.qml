@@ -184,7 +184,7 @@ Rectangle {
 			id: durr
 			text: timeFromDuration(audio.duration)
 			color: label_color
-			font.pixelSize: 10
+			font.pixelSize: theme.fontsize.normal
 		}
 	}
 }

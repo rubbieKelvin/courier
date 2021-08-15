@@ -38,7 +38,7 @@ RowLayout {
 		Label {
 			id: text_
 			color: theme.text
-			font.pixelSize: 10
+			font.pixelSize: theme.fontsize.normal
 			wrapMode: Text.WordWrap
 			padding: 10
 			Layout.maximumWidth: maxLabelWidth
@@ -90,7 +90,7 @@ RowLayout {
 
 		Label {
 			id: time_text
-			font.pixelSize: 8
+			font.pixelSize: theme.fontsize.tiny
 			horizontalAlignment: showAtLeft ? Text.AlignLeft : Text.AlignRight
 			verticalAlignment: Text.AlignVCenter
 			color: theme.disabled

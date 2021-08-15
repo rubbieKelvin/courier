@@ -6,7 +6,7 @@ TextField {
 	id: root
 	leftPadding: 30
 	placeholderText: qsTr("Search Courrier..")
-	font.pixelSize: 10
+	font.pixelSize: theme.fontsize.normal
 
 	background: Rectangle {
 		id: rectangle
